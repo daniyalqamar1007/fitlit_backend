@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { CreateUserDto } from './dto/signup.dto';
 
@@ -7,9 +11,16 @@ export class AuthService {
   constructor(private userService: UserService) {}
 
   async signup(dto: CreateUserDto) {
-    const existing = await this.userService.findByEmail(dto.email);
-    if (existing) throw new BadRequestException('Email already in use');
+    try {
+      const existing = await this.userService.findByEmail(dto.email);
+      if (existing) throw new BadRequestException('Email already in use');
 
-    return this.userService.createUser(dto);
+      return await this.userService.createUser(dto);
+    } catch (error) {
+      // Re-throw known exceptions
+      if (error instanceof BadRequestException) throw error;
+
+      throw new InternalServerErrorException('Signup failed', error.message);
+    }
   }
 }

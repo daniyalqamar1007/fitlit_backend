@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from '../auth/dto/signup.dto';
@@ -13,16 +17,28 @@ export class UserService {
   ) {}
 
   async createUser(dto: CreateUserDto) {
-    const userId = await this.counterService.getNextSequence('user');
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
+    try {
+      const userExists = await this.userModel.findOne({ email: dto.email });
+      if (userExists) {
+        throw new BadRequestException('Email already in use');
+      }
 
-    const user = new this.userModel({
-      ...dto,
-      password: hashedPassword,
-      userId,
-    });
+      const userId = await this.counterService.getNextSequence('user');
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    return user.save();
+      const user = new this.userModel({
+        ...dto,
+        password: hashedPassword,
+        userId,
+      });
+
+      return await user.save();
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create user',
+        error.message,
+      );
+    }
   }
 
   async findByEmail(email: string) {
