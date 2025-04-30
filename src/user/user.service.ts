@@ -5,12 +5,15 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CreateUserDto } from '../auth/dto/signup.dto';
+import { CreateUserDto } from '../auth/dto/signup.dto/signup.dto';
 import { CounterService } from '../common/services/counter.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
+  findById(sub: any) {
+      throw new Error('Method not implemented.');
+  }
   constructor(
     @InjectModel('User') private userModel: Model<any>,
     private counterService: CounterService,
