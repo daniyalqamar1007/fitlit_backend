@@ -8,7 +8,9 @@ import { AppController } from './app.controller';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot(
+      { isGlobal: true },
+    ),
     MongooseModule.forRoot(process.env.MONGODB_URI?? ''),
     AuthModule,
     UserModule,
@@ -18,3 +20,4 @@ import { AppController } from './app.controller';
   providers: [AppService],
 })
 export class AppModule {}
+
