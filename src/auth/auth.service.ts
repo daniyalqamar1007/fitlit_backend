@@ -13,7 +13,7 @@ import * as bcrypt from 'bcrypt';
 export class AuthService {
   constructor(
     private userService: UserService,
-    private readonly jwtService: JwtService,
+    private jwtService: JwtService,
   ) {}
 
   async signup(dto: CreateUserDto) {
@@ -29,7 +29,7 @@ export class AuthService {
       return {
         message: 'Signup successful',
         userId: user.userId,
-        token,
+        access_token: token,
       };
     } catch (error) {
       // Re-throw known exceptions
@@ -62,18 +62,15 @@ export class AuthService {
       return {
         message: 'Login successful',
         userId: user.userId,
-        token,
+        access_token: token,
       };
     } catch (error) {
-      // Optional: log error here
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
+      if (error instanceof UnauthorizedException) throw error;
       throw new UnauthorizedException('Login failed. Please try again.');
     }
   }
 
-  private generateToken(user: any) {
+  private generateToken(user: any): string {
     const payload = {
       sub: user.userId,
       email: user.email,
