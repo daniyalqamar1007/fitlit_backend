@@ -21,7 +21,16 @@ export class AuthService {
       const existing = await this.userService.findByEmail(dto.email);
       if (existing) throw new BadRequestException('Email already in use');
 
-      return await this.userService.createUser(dto);
+      const user = await this.userService.createUser(dto);
+
+      // Generate JWT token
+      const token = this.generateToken(user);
+
+      return {
+        message: 'Signup successful',
+        userId: user.userId,
+        token,
+      };
     } catch (error) {
       // Re-throw known exceptions
       if (error instanceof BadRequestException) throw error;
@@ -29,6 +38,7 @@ export class AuthService {
       throw new InternalServerErrorException('Signup failed', error.message);
     }
   }
+
   async signin(loginDto: LoginDto) {
     try {
       // Find user by email
@@ -54,8 +64,6 @@ export class AuthService {
         userId: user.userId,
         token,
       };
-
-      
     } catch (error) {
       // Optional: log error here
       if (error instanceof UnauthorizedException) {
@@ -64,8 +72,6 @@ export class AuthService {
       throw new UnauthorizedException('Login failed. Please try again.');
     }
   }
-
-
 
   private generateToken(user: any) {
     const payload = {
