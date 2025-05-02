@@ -1,6 +1,15 @@
-import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEmail, IsNotEmpty, Matches, MinLength } from 'class-validator';
 
 export class LoginDto {
-  @IsEmail() email: string;
-  @MinLength(6) password: string;
+  @IsEmail({}, { message: 'Please provide a valid email address' })
+  @Matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, {
+    message: 'Email must be in a valid format (e.g., user@example.com)',
+  })
+  @Transform(({ value }) => value.trim())
+  email: string;
+
+  @MinLength(6)
+  @Transform(({ value }) => value.trim())
+  password: string;
 }
