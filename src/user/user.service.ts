@@ -11,9 +11,11 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
-  findById(sub: any) {
-      throw new Error('Method not implemented.');
+
+  async findById(id: number) {
+    return this.userModel.findOne({ userId: id }); // assuming userId is the numeric field
   }
+
   constructor(
     @InjectModel('User') private userModel: Model<any>,
     private counterService: CounterService,

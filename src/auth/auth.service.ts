@@ -13,7 +13,7 @@ import * as bcrypt from 'bcrypt';
 export class AuthService {
   constructor(
     private userService: UserService,
-    private readonly jwtService: JwtService,
+    private jwtService: JwtService,
   ) {}
 
   async signup(dto: CreateUserDto) {
@@ -21,7 +21,16 @@ export class AuthService {
       const existing = await this.userService.findByEmail(dto.email);
       if (existing) throw new BadRequestException('Email already in use');
 
-      return await this.userService.createUser(dto);
+      const user = await this.userService.createUser(dto);
+
+      // Generate JWT token
+      const token = this.generateToken(user);
+
+      return {
+        message: 'Signup successful',
+        userId: user.userId,
+        access_token: token,
+      };
     } catch (error) {
       // Re-throw known exceptions
       if (error instanceof BadRequestException) throw error;
@@ -29,6 +38,7 @@ export class AuthService {
       throw new InternalServerErrorException('Signup failed', error.message);
     }
   }
+
   async signin(loginDto: LoginDto) {
     try {
       // Find user by email
@@ -52,22 +62,15 @@ export class AuthService {
       return {
         message: 'Login successful',
         userId: user.userId,
-        token,
+        access_token: token,
       };
-
-      
     } catch (error) {
-      // Optional: log error here
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
+      if (error instanceof UnauthorizedException) throw error;
       throw new UnauthorizedException('Login failed. Please try again.');
     }
   }
 
-
-
-  private generateToken(user: any) {
+  private generateToken(user: any): string {
     const payload = {
       sub: user.userId,
       email: user.email,
