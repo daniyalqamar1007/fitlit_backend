@@ -21,4 +21,3 @@ import { MailerModule } from './mailer/mailer.module';
   providers: [AppService],
 })
 export class AppModule {}
-

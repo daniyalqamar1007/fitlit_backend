@@ -22,7 +22,7 @@ export class AuthService {
     private mailerService: AppMailerService,
   ) {}
 
-  // ✅ Signup Step 1: Send OTP
+  // Signup Step 1: Send OTP
   async signupWithOtp(dto: CreateUserDto) {
     try {
       const existing = await this.userService.findByEmail(dto.email);
@@ -43,7 +43,7 @@ export class AuthService {
     }
   }
 
-  // ✅ Signup Step 2: Verify OTP and Register
+  // Signup Step 2: Verify OTP and Register
   async verifyOtpAndRegister(dto: OtpVerifyDto) {
     try {
       const isValid = await this.otpService.verifyOtp(dto.email, dto.otp);
@@ -81,7 +81,7 @@ export class AuthService {
     }
   }
 
-  // ✅ Existing Login
+  
   async signin(loginDto: LoginDto) {
     try {
       const user = await this.userService.findByEmail(loginDto.email);
@@ -110,7 +110,7 @@ export class AuthService {
     }
   }
 
-  // 🔐 Token generation
+  // Token generation
   private generateToken(user: any): string {
     const payload = {
       sub: user.userId,

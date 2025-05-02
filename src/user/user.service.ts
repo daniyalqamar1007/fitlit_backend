@@ -50,3 +50,4 @@ export class UserService {
     return this.userModel.findOne({ email });
   }
 }
+
