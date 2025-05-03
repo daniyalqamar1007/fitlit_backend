@@ -6,7 +6,6 @@ import { UserModule } from '../user/user.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { OtpModule } from 'src/otp/otp.module';
 import { MailerModule } from '../mailer/mailer.module'; // ✅ your local module, not @nestjs-modules/mailer
 
 @Module({
@@ -19,7 +18,6 @@ import { MailerModule } from '../mailer/mailer.module'; // ✅ your local module
         expiresIn: '7d',
       },
     }),
-    OtpModule,
     MailerModule, 
   ],
   providers: [AuthService, JwtStrategy],

@@ -11,7 +11,6 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
-
   async findById(id: number) {
     return this.userModel.findOne({ userId: id }); // assuming userId is the numeric field
   }
@@ -49,5 +48,8 @@ export class UserService {
   async findByEmail(email: string) {
     return this.userModel.findOne({ email });
   }
+  
+
+
 }
 
