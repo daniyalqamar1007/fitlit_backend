@@ -5,19 +5,17 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
+import { MailerModule } from './mailer/mailer.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(
-      { isGlobal: true },
-    ),
-    MongooseModule.forRoot(process.env.MONGODB_URI?? ''),
+    ConfigModule.forRoot({ isGlobal: true }),
+    MongooseModule.forRoot(process.env.MONGODB_URI ?? ''),
     AuthModule,
     UserModule,
-
+    MailerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
-
