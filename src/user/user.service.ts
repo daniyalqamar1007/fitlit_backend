@@ -48,8 +48,8 @@ export class UserService {
   async findByEmail(email: string) {
     return this.userModel.findOne({ email });
   }
-  
 
-
+  async updatePassword(email: string, hashedPassword: string) {
+    return this.userModel.updateOne({ email }, { password: hashedPassword });
+  }
 }
-

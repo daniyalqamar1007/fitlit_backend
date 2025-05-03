@@ -30,5 +30,19 @@ export class AppMailerService {
     });
   }
 
-
+  async sendOtpEmailForgotPassword(to: string, otp: string) {
+    await this.mailerService.sendMail({
+      to,
+      subject: 'Your OTP Code',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color:rgb(162, 199, 77);">Welcome to Fitlit!</h1>
+        
+          <li>here is your otp code don't share it with one one${otp}</li>
+        <p>Always look great!</p>
+        <p>The Fitlit Team</p>
+      </div>
+      `,
+    });
+  }
 }

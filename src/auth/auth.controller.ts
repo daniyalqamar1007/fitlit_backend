@@ -3,6 +3,8 @@ import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/signup.dto/signup.dto';
 import { LoginDto } from './dto/signin.dto/signin.dto';
 import { OtpVerifyDto } from './dto/signup.dto/otp-verify.dto';
+import { ForgotPasswordDto } from './dto/forgotpassword.dto/forgotpassword.dto';
+import { ResetPasswordDto } from './dto/resetpassword.dto/resetpassword.dto';
 
 
 
@@ -27,6 +29,13 @@ export class AuthController {
     return this.authService.signin(loginDto);
   }
 
+  @Post('forgot-Password')
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPasswordOtpGenertor(dto);
+  }
 
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
+  }
 }
-
