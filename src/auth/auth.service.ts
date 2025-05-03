@@ -8,7 +8,7 @@ import { UserService } from '../user/user.service';
 import { CreateUserDto } from './dto/signup.dto/signup.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/signin.dto/signin.dto';
-import { OtpVerifyDto } from './dto/signup.dto/otp-verify.dto';
+;
 import * as bcrypt from 'bcrypt';
 import { AppMailerService } from '../mailer/mailer.service';
 
