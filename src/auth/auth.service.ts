@@ -11,6 +11,8 @@ import { LoginDto } from './dto/signin.dto/signin.dto';
 ;
 import * as bcrypt from 'bcrypt';
 import { AppMailerService } from '../mailer/mailer.service';
+import { ForgotPasswordDto } from './dto/forgotpassword.dto/forgotpassword.dto';
+import { ResetPasswordDto } from './dto/resetpassword.dto/resetpassword.dto';
 
 
 @Injectable()
@@ -97,5 +99,23 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
+  async forgotPasswordOtpGenertor(dto: ForgotPasswordDto) {
+    const existing = await this.userService.findByEmail(dto.email);
+    if (!existing) throw new BadRequestException('Email not registered');
 
+    const otp = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit OTP
+
+    await this.mailerService.sendOtpEmailForgotPassword(dto.email, otp);
+
+    return {
+      otp,
+      message: 'OTP send to your email',
+    };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const hashed = await bcrypt.hash(dto.newPassword, 10);
+    await this.userService.updatePassword(dto.email, hashed);
+    return { message: 'Password updated successfully' };
+  }
 }
