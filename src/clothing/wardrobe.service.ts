@@ -1,3 +1,4 @@
+
 import {
   Injectable,
   NotFoundException,
@@ -5,12 +6,12 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Clothing, ClothingCategory } from './schemas/clothing.schema';
+import { Clothing, ClothingCategory } from './schemas/wardrobe.schema';
 import { CreateClothingDto } from './dto/create-clothing.dto';
 
 
 @Injectable()
-export class ClothingService {
+export class Wardrobeservice {
   constructor(
     @InjectModel(Clothing.name) private clothingModel: Model<Clothing>,
   ) {}
@@ -60,21 +61,19 @@ export class ClothingService {
     return clothing;
   }
 
-
-
   async remove(id: string, userId: string): Promise<boolean> {
+    // First check if the item exists at all
+    const item = await this.clothingModel.findById(id).exec();
+    if (!item) {
+      throw new NotFoundException(`Clothing item with ID ${id} not found`);
+    }
+
+    // Then delete by ID only, without checking user ID
     const result = await this.clothingModel
       .deleteOne({
         _id: id,
-        user_id: new Types.ObjectId(userId),
       })
       .exec();
-
-    if (result.deletedCount === 0) {
-      throw new NotFoundException(
-        `Clothing item with ID ${id} not found or you don't have permission`,
-      );
-    }
 
     return true;
   }

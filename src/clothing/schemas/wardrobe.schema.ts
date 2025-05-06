@@ -33,7 +33,7 @@ export enum AccessorySubCategory {
 
 @Schema({
   timestamps: true,
-  collection: 'clothing_items', 
+  collection: 'wardrobe_items', 
 })
 export class Clothing extends Document {
   @Prop({

@@ -6,7 +6,7 @@ import { UserModule } from './user/user.module';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
 import { MailerModule } from './mailer/mailer.module';
-import { ClothingModule } from './clothing/clothing.module';
+import { ClothingModule } from './clothing/wardrobe.module';
 
 
 @Module({

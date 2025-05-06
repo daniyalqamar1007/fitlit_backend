@@ -10,10 +10,10 @@ import {
   Req,
   Query,
 } from '@nestjs/common';
-import { ClothingService } from './clothing.service';
+import { Wardrobeservice } from './wardrobe.service';
 import { CreateClothingDto } from './dto/create-clothing.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ClothingCategory } from './schemas/clothing.schema';
+import { ClothingCategory } from './schemas/wardrobe.schema';
 import { Request } from 'express';
 
 
@@ -24,9 +24,9 @@ interface RequestWithUser extends Request {
   };
 }
 
-@Controller('clothing-items')
-export class ClothingController {
-  constructor(private readonly clothingService: ClothingService) {}
+@Controller('wardrobe-items')
+export class WardrobeController {
+  constructor(private readonly wardrobeservice: Wardrobeservice) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -35,7 +35,7 @@ export class ClothingController {
     @Body() createClothingDto: CreateClothingDto,
   ) {
     const userId = req.user.userId;
-    return this.clothingService.create(userId, createClothingDto);
+    return this.wardrobeservice.create(userId, createClothingDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -45,21 +45,19 @@ export class ClothingController {
     @Query('category') category?: ClothingCategory,
     @Query('subCategory') subCategory?: string,
   ) {
-    return this.clothingService.findAll(userId, category, subCategory);
+    return this.wardrobeservice.findAll(userId, category, subCategory);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.clothingService.findOne(id);
+    return this.wardrobeservice.findOne(id);
   }
-
-
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string, @Req() req: RequestWithUser) {
     const userId = req.user.userId;
-    return this.clothingService.remove(id, userId);
+    return this.wardrobeservice.remove(id, userId);
   }
-}
+} 

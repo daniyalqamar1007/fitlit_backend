@@ -5,7 +5,7 @@ import {
   PantSubCategory,
   ShoeSubCategory,
   AccessorySubCategory,
-} from '../schemas/clothing.schema';
+} from '../schemas/wardrobe.schema';
 
 export class SubCategoryValidator {
   validate(value: string, args: any) {
