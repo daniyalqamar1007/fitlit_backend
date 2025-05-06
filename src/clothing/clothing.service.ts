@@ -7,7 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Clothing, ClothingCategory } from './schemas/clothing.schema';
 import { CreateClothingDto } from './dto/create-clothing.dto';
-import { UpdateClothingDto } from './dto/update-clothing.dto';
+// import { UpdateClothingDto } from './dto/update-clothing.dto';
 
 @Injectable()
 export class ClothingService {
@@ -60,31 +60,31 @@ export class ClothingService {
     return clothing;
   }
 
-  async update(
-    id: string,
-    userId: string,
-    updateClothingDto: UpdateClothingDto,
-  ): Promise<Clothing> {
-    try {
-      const clothing = await this.clothingModel
-        .findOneAndUpdate(
-          { _id: id, user_id: new Types.ObjectId(userId) },
-          { $set: updateClothingDto },
-          { new: true },
-        )
-        .exec();
+  // async update(
+  //   id: string,
+  //   userId: string,
+  //   updateClothingDto: UpdateClothingDto,
+  // ): Promise<Clothing> {
+  //   try {
+  //     const clothing = await this.clothingModel
+  //       .findOneAndUpdate(
+  //         { _id: id, user_id: new Types.ObjectId(userId) },
+  //         { $set: updateClothingDto },
+  //         { new: true },
+  //       )
+  //       .exec();
 
-      if (!clothing) {
-        throw new NotFoundException(
-          `Clothing item with ID ${id} not found or you don't have permission`,
-        );
-      }
+  //     if (!clothing) {
+  //       throw new NotFoundException(
+  //         `Clothing item with ID ${id} not found or you don't have permission`,
+  //       );
+  //     }
 
-      return clothing;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
+  //     return clothing;
+  //   } catch (error) {
+  //     throw new BadRequestException(error.message);
+  //   }
+  // }
 
   async remove(id: string, userId: string): Promise<boolean> {
     const result = await this.clothingModel

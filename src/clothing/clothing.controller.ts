@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ClothingService } from './clothing.service';
 import { CreateClothingDto } from './dto/create-clothing.dto';
-import { UpdateClothingDto } from './dto/update-clothing.dto';
+// import { UpdateClothingDto } from './dto/update-clothing.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ClothingCategory } from './schemas/clothing.schema';
 import { Request } from 'express';
@@ -55,16 +55,16 @@ export class ClothingController {
     return this.clothingService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Req() req: RequestWithUser,
-    @Body() updateClothingDto: UpdateClothingDto,
-  ) {
-    const userId = req.user.userId;
-    return this.clothingService.update(id, userId, updateClothingDto);
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Patch(':id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Req() req: RequestWithUser,
+  //   @Body() updateClothingDto: UpdateClothingDto,
+  // ) {
+  //   const userId = req.user.userId;
+  //   return this.clothingService.update(id, userId, updateClothingDto);
+  // }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
