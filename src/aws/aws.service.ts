@@ -1,0 +1,94 @@
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { ResponseDto } from './dto/response.dto';
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+import {
+  S3Client,
+  DeleteObjectCommand,
+  PutObjectCommand,
+} from '@aws-sdk/client-s3';
+import { ConfigService } from '@nestjs/config';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+@Injectable()
+export class AwsService {
+  private s3: S3Client;
+  private bucketName: string;
+  constructor(private configService: ConfigService) {
+    this.s3 = new S3Client({
+      region: process.env.AWS_BUCKET_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY!,
+        secretAccessKey: process.env.AWS_SECRET_KEY!,
+      },
+    });
+    this.bucketName = process.env.S3_BUCKET_NAME!;
+  }
+  async generateSignedUrl(
+    fileName: string,
+    contentType: string,
+    timeStamp?: string,
+  ) {
+    try {
+      if (timeStamp) {
+        const key = fileName;
+        // console.log(key)
+        // Create a PutObjectCommand with the correct parameters
+        const command = new PutObjectCommand({
+          Bucket: this.bucketName,
+          Key: key,
+          ContentType: contentType,
+        });
+        // Generate the signed URL
+        const url = await getSignedUrl(this.s3, command, { expiresIn: 60 * 5 }); // URL expires in 5 minutes
+        return {
+          success: false,
+          statusCode: HttpStatus.OK,
+          msg: {
+            url,
+            key,
+          },
+        };
+      } else {
+        const key = `${Date.now()}-${fileName}`;
+        // Create a PutObjectCommand with the correct parameters
+        const command = new PutObjectCommand({
+          Bucket: this.bucketName,
+          Key: key,
+          ContentType: contentType,
+        });
+        // Generate the signed URL
+        const url = await getSignedUrl(this.s3, command, { expiresIn: 60 * 5 }); // URL expires in 5 minutes
+        return {
+          success: false,
+          statusCode: HttpStatus.OK,
+          msg: {
+            url,
+            key,
+          },
+        };
+      }
+    } catch (e) {
+      return { success: false, statusCode: HttpStatus.INTERNAL_SERVER_ERROR };
+    }
+  }
+  async deleteFile(key: string): Promise<ResponseDto> {
+    try {
+      const command = new DeleteObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      });
+      await this.s3.send(command);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        msg: `File ${key} deleted successfully`,
+      };
+    } catch (error) {
+      console.log(`Failed to delete file: ${error.message}`);
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        msg: error.message,
+      };
+    }
+  }
+}
