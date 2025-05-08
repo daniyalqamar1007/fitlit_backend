@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { AppController } from './app.controller';
 import { MailerModule } from './mailer/mailer.module';
 import { WardrobeModule } from './wardrobe/wardrobe.module';
+import { AwsModule } from './aws/aws.module';
 
 
 @Module({
@@ -17,6 +18,7 @@ import { WardrobeModule } from './wardrobe/wardrobe.module';
     UserModule,
     MailerModule,
     WardrobeModule,
+    AwsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
