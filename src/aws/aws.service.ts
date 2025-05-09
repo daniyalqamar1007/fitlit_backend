@@ -8,6 +8,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import * as Multer from 'multer';
 @Injectable()
 export class AwsService {
   private s3: S3Client;
@@ -21,6 +22,22 @@ export class AwsService {
       },
     });
     this.bucketName = process.env.S3_BUCKET_NAME!;
+  }
+  async uploadFile(file: Multer.File, userId: string): Promise<string> {
+    const fileKey = `wardrobe/${userId}/${Date.now()}-${file.originalname}`;
+
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: fileKey,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+      // ACL: 'public-read', // Make the file publicly accessible
+    });
+
+    await this.s3.send(command);
+
+    // Generate the public URL
+    return `https://${this.bucketName}.s3.${this.configService.get<string>('AWS_BUCKET_REGION')}.amazonaws.com/${fileKey}`;
   }
   async generateSignedUrl(
     fileName: string,
