@@ -91,9 +91,6 @@ export class WardrobeItem extends Document {
     required: true,
   })
   sub_category: string;
-
-  @Prop({ type: String, required: true })
-  name: string;
 }
 
 export const WardrobeItemSchema = SchemaFactory.createForClass(WardrobeItem);

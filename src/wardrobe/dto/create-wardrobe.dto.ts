@@ -52,8 +52,4 @@ export class CreateWardrobeItemDto {
   @IsNotEmpty()
   @Validate(SubCategoryValidator)
   sub_category: string;
-
-  @IsString()
-  @IsNotEmpty()
-  name: string;
 }
