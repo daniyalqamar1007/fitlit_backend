@@ -8,6 +8,7 @@ import { AppController } from './app.controller';
 import { MailerModule } from './mailer/mailer.module';
 import { WardrobeModule } from './wardrobe/wardrobe.module';
 import { AwsModule } from './aws/aws.module';
+import { AvatarModule } from './avatar/avatar.module';
 
 
 @Module({
@@ -19,6 +20,7 @@ import { AwsModule } from './aws/aws.module';
     MailerModule,
     WardrobeModule,
     AwsModule,
+    AvatarModule,
   ],
   controllers: [AppController],
   providers: [AppService],
