@@ -1,5 +1,5 @@
 import { ValidationPipe } from '@nestjs/common';
-import {  NestFactory } from '@nestjs/core';
+import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -15,10 +15,11 @@ async function bootstrap() {
       },
     }),
   );
-  app.use((req, res, next) => {
-    console.log(`[${req.method}] ${req.url}`);
-    next();
-  });
+app.enableCors({
+  origin: ['http://localhost:3000'], // allowed origins
+  methods: 'GET,POST,PUT,DELETE',
+  credentials: true, // allow cookies and authorization headers
+});
 
   await app.listen(process.env.PORT ?? 3000);
 }
