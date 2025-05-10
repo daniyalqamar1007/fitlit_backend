@@ -1,4 +1,11 @@
-import { IsEnum, IsNotEmpty, IsString, IsUrl, Validate } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  Validate,
+} from 'class-validator';
+
 import {
   WardrobeItemCategory,
   TopSubCategory,
@@ -37,16 +44,12 @@ export class CreateWardrobeItemDto {
   @IsNotEmpty()
   category: WardrobeItemCategory;
 
-  @IsUrl()
-  @IsNotEmpty()
-  image_url: string;
+  @IsString()
+  @IsOptional()
+  image_url?: string; // Now optional, will be generated after file upload
 
   @IsString()
   @IsNotEmpty()
   @Validate(SubCategoryValidator)
   sub_category: string;
-
-  @IsString()
-  @IsNotEmpty()
-  name: string;
 }
