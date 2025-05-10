@@ -1,67 +1,45 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema } from 'mongoose';
-
 export enum WardrobeItemCategory {
-  TOP = 'top',
-  BOTTOM = 'bottom',
-  FOOTWEAR = 'footwear',
+  SHIRTS = 'shirts',
+  PANTS = 'pants',
   ACCESSORIES = 'accessories',
-  OUTERWEAR = 'outerwear',
-  DRESSES = 'dresses',
+  SHOES = 'shoes',
 }
 
-export enum TopSubCategory {
+export enum ShirtSubCategory {
   TSHIRT = 't-shirt',
-  SHIRT = 'shirt',
-  POLO = 'polo',
-  TANK_TOP = 'tank_top',
-  BLOUSE = 'blouse',
-  SWEATER = 'sweater',
+  HALF_SHIRT = 'half-shirt',
+  DRESS_SHIRT = 'dress shirt',
+  CASUAL_SHIRT = 'casual shirt',
+  POLO_SHIRT = 'polo shirt',
 }
 
-export enum BottomSubCategory {
+export enum PantsSubCategory {
   JEANS = 'jeans',
-  CHINOS = 'chinos',
-  SHORTS = 'shorts',
   TROUSERS = 'trousers',
-  SKIRT = 'skirt',
+  SHORTS = 'shorts',
+  CARGO = 'cargo',
+  TRACK_PANTS = 'track pants',
+  FORMAL_PANT = 'formal pant',
 }
 
-export enum FootwearSubCategory {
-  SNEAKERS = 'sneakers',
-  BOOTS = 'boots',
-  CHELSEA = 'chelsea',
-  LOAFERS = 'loafers',
-  SANDALS = 'sandals',
-  FORMAL = 'formal',
-  HEELS = 'heels',
-}
-
-export enum AccessorySubCategory {
-  WATCH = 'watch',
+export enum AccessoriesSubCategory {
+  NECKLACE = 'necklace',
+  BRACELET = 'bracelet',
+  EARRING = 'earring',
   BELT = 'belt',
   HAT = 'hat',
   SCARF = 'scarf',
-  GLOVES = 'gloves',
-  JEWELRY = 'jewelry',
-  BAG = 'bag',
-  SUNGLASSES = 'sunglasses',
 }
 
-export enum OuterwearSubCategory {
-  JACKET = 'jacket',
-  COAT = 'coat',
-  HOODIE = 'hoodie',
-  CARDIGAN = 'cardigan',
-  BLAZER = 'blazer',
-}
-
-export enum DressSubCategory {
-  CASUAL = 'casual',
-  FORMAL = 'formal',
-  COCKTAIL = 'cocktail',
-  SUNDRESS = 'sundress',
-  EVENING = 'evening',
+export enum ShoesSubCategory {
+  SNEAKERS = 'sneakers',
+  FORMAL_SHOES = 'formal shoes',
+  BOOTS = 'boots',
+  LOAFERS = 'loafers',
+  SANDALS = 'sandals',
+  SPORTS_SHOE = 'sports shoe',
 }
 
 @Schema({
@@ -70,27 +48,21 @@ export enum DressSubCategory {
 })
 export class WardrobeItem extends Document {
   @Prop({
-    type: MongooseSchema.Types.ObjectId,
+    type: Number,
     ref: 'User',
     required: true,
   })
-  user_id: MongooseSchema.Types.ObjectId;
+  user_id: Number;
+  
 
-  @Prop({
-    type: String,
-    enum: WardrobeItemCategory,
-    required: true,
-  })
+  @Prop({ type: String, required: true, enum: WardrobeItemCategory })
   category: WardrobeItemCategory;
 
   @Prop({ type: String, required: true })
-  image_url: string;
-
-  @Prop({
-    type: String,
-    required: true,
-  })
   sub_category: string;
+
+  @Prop({ type: String, required: true })
+  image_url: string;
 }
 
 export const WardrobeItemSchema = SchemaFactory.createForClass(WardrobeItem);

@@ -22,7 +22,7 @@ export class WardrobeService {
     try {
       const newWardrobeItem = new this.wardrobeItemModel({
         ...createWardrobeItemDto,
-        user_id: new Types.ObjectId(userId),
+        user_id: userId,
       });
       return newWardrobeItem.save();
     } catch (error) {
@@ -38,7 +38,7 @@ export class WardrobeService {
     const query: any = {};
 
     if (userId) {
-      query.user_id = new Types.ObjectId(userId);
+      query.user_id = userId;
     }
 
     if (category) {
