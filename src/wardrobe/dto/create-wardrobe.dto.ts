@@ -1,34 +1,22 @@
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsString,
-  IsOptional,
-  Validate,
-} from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, Validate } from 'class-validator';
 
 import {
   WardrobeItemCategory,
-  TopSubCategory,
-  BottomSubCategory,
-  FootwearSubCategory,
-  AccessorySubCategory,
-  OuterwearSubCategory,
-  DressSubCategory,
+  ShirtSubCategory,
+  PantsSubCategory,
+  AccessoriesSubCategory,
+  ShoesSubCategory,
 } from '../schemas/wardrobe.schema';
 
 export class SubCategoryValidator {
   validate(value: string, args: any) {
     const category = args.object.category;
 
-    if (!category) return true;
-
     const validSubCategories = {
-      [WardrobeItemCategory.TOP]: Object.values(TopSubCategory),
-      [WardrobeItemCategory.BOTTOM]: Object.values(BottomSubCategory),
-      [WardrobeItemCategory.FOOTWEAR]: Object.values(FootwearSubCategory),
-      [WardrobeItemCategory.ACCESSORIES]: Object.values(AccessorySubCategory),
-      [WardrobeItemCategory.OUTERWEAR]: Object.values(OuterwearSubCategory),
-      [WardrobeItemCategory.DRESSES]: Object.values(DressSubCategory),
+      [WardrobeItemCategory.SHIRTS]: Object.values(ShirtSubCategory),
+      [WardrobeItemCategory.PANTS]: Object.values(PantsSubCategory),
+      [WardrobeItemCategory.ACCESSORIES]: Object.values(AccessoriesSubCategory),
+      [WardrobeItemCategory.SHOES]: Object.values(ShoesSubCategory),
     };
 
     return validSubCategories[category]?.includes(value) || false;
@@ -40,16 +28,16 @@ export class SubCategoryValidator {
 }
 
 export class CreateWardrobeItemDto {
-  @IsEnum(WardrobeItemCategory)
-  @IsNotEmpty()
-  category: WardrobeItemCategory;
-
   @IsString()
-  @IsOptional()
-  image_url?: string; // Now optional, will be generated after file upload
+  @IsNotEmpty()
+  category: string;
 
   @IsString()
   @IsNotEmpty()
   @Validate(SubCategoryValidator)
   sub_category: string;
+
+  @IsString()
+  @IsOptional()
+  image_url?: string;
 }
