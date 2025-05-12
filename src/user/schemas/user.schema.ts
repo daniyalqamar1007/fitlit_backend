@@ -6,8 +6,8 @@ export type UserDocument = User & Document;
 
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ type: Number, required: true })
-  userId: number;
+  // @Prop({ type: Number, required: true })
+  // userId: number;
 
   @Prop({ required: true })
   name: string;
@@ -18,18 +18,16 @@ export class User {
   @Prop({ required: true })
   password: string;
 
-  @Prop({ default: false })
-  emailVerified: boolean;
+  @Prop({ required: true })
+  profilePhoto: String;
 
-  @Prop()
-  otp: string;
-
-  @Prop()
-  otpExpiry: Date;
+  @Prop({ required: true })
+  gender: { type: String; enum: ['male', 'female', 'other'] };
 
   @Prop({ default: false })
   isAdmin: boolean; // Added isAdmin flag to identify admin users
 }
+
 
 export const UserSchema = SchemaFactory.createForClass(User);
 // import { Schema } from 'mongoose';
