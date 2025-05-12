@@ -8,6 +8,7 @@ import { Model } from 'mongoose';
 import { CreateUserDto } from '../auth/dto/signup.dto/signup.dto';
 import { CounterService } from '../common/services/counter.service';
 import * as bcrypt from 'bcrypt';
+import { UserDocument } from './schemas/user.schema';
 
 @Injectable()
 export class UserService {
@@ -51,5 +52,9 @@ export class UserService {
 
   async updatePassword(email: string, hashedPassword: string) {
     return this.userModel.updateOne({ email }, { password: hashedPassword });
+  }
+
+  async findAll(): Promise<UserDocument[]> {
+    return this.userModel.find().exec();
   }
 }
