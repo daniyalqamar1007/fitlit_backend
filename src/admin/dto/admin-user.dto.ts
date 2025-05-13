@@ -5,8 +5,13 @@ export class AdminUserResponseDto {
   name: string;
   email: string;
   isAdmin: boolean;
-//   createdAt: Date;
-//   updatedAt: Date;
+  avatars?: any[];
+  shirts?: any[];
+  pants?: any[];
+  shoes?: any[];
+  accessories?: any[];
+  //   createdAt: Date;
+  //   updatedAt: Date;
 }
 
 export class QueryParamsDto {
