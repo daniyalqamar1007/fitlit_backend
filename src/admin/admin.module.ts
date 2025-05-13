@@ -10,6 +10,7 @@ import { UserModule } from '../user/user.module';
 import { Avatar, AvatarSchema } from 'src/avatar/schemas/avatar.schema';
 import { WardrobeItem, WardrobeItemSchema } from 'src/wardrobe/schemas/wardrobe.schema';
 
+
 @Module({
   imports: [
     MongooseModule.forFeature([

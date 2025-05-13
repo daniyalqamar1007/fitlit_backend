@@ -16,6 +16,29 @@ export class AdminService {
     @InjectModel(WardrobeItem.name) private wardrobeModel: Model<WardrobeItem>,
   ) {}
 
+  async getNewUsers(days: number = 7): Promise<User[]> {
+    const threshold = new Date();
+    threshold.setDate(threshold.getDate() - days);
+
+    return this.userModel
+      .find({
+        createdAt: { $gte: threshold },
+      })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async getNewUserCount(days: number = 7): Promise<number> {
+    const threshold = new Date();
+    threshold.setDate(threshold.getDate() - days);
+
+    return this.userModel
+      .countDocuments({
+        createdAt: { $gte: threshold },
+      })
+      .exec();
+  }
+
   async getAllUsers(queryParams: QueryParamsDto): Promise<{
     users: AdminUserResponseDto[];
     total: number;
