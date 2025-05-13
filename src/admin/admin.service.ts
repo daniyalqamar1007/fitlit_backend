@@ -1,17 +1,45 @@
+import { WardrobeModule } from './../wardrobe/wardrobe.module';
 // src/admin/admin.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User, UserDocument } from '../user/schemas/user.schema';
 import { AdminUserResponseDto, QueryParamsDto } from './dto/admin-user.dto';
+import { Avatar } from '../avatar/schemas/avatar.schema'; // adjust path as needed
+import { WardrobeItem } from 'src/wardrobe/schemas/wardrobe.schema';
 
 @Injectable()
 export class AdminService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Avatar.name) private avatarModel: Model<Avatar>,
+    @InjectModel(WardrobeItem.name) private wardrobeModel: Model<WardrobeItem>,
+  ) {}
 
-  async getAllUsers(
-    queryParams: QueryParamsDto,
-  ): Promise<{
+  async getNewUsers(days: number = 7): Promise<User[]> {
+    const threshold = new Date();
+    threshold.setDate(threshold.getDate() - days);
+
+    return this.userModel
+      .find({
+        createdAt: { $gte: threshold },
+      })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async getNewUserCount(days: number = 7): Promise<number> {
+    const threshold = new Date();
+    threshold.setDate(threshold.getDate() - days);
+
+    return this.userModel
+      .countDocuments({
+        createdAt: { $gte: threshold },
+      })
+      .exec();
+  }
+
+  async getAllUsers(queryParams: QueryParamsDto): Promise<{
     users: AdminUserResponseDto[];
     total: number;
     page: number;
@@ -59,11 +87,49 @@ export class AdminService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
-    return this.mapToAdminUserResponse(user);
+    const avatars = await this.avatarModel
+      .find({ user_id: user.userId })
+      .lean()
+      .exec();
+
+    const shirts = await this.wardrobeModel
+      .find({ user_id: userId, category: 'shirts' })
+      .lean()
+      .exec();
+
+    const pants = await this.wardrobeModel
+      .find({ user_id: userId, category: 'pants' })
+      .lean()
+      .exec();
+
+    const shoes = await this.wardrobeModel
+      .find({ user_id: userId, category: 'shoes' })
+      .lean()
+      .exec();
+
+    const accessories = await this.wardrobeModel
+      .find({ user_id: userId, category: 'accessories' })
+      .lean()
+      .exec();
+
+    return {
+      ...this.mapToAdminUserResponse(user),
+      avatars,
+      shirts,
+      pants,
+      shoes,
+      accessories,
+    };
   }
 
   async deleteUser(userId: number): Promise<{ message: string }> {
     const result = await this.userModel.deleteOne({ userId }).exec();
+
+    // Delete avatars linked to the user
+    await this.avatarModel.deleteMany({ user_id: userId }).exec();
+
+    // Delete wardrobe items linked to the user
+    await this.wardrobeModel.deleteMany({ user_id: userId }).exec();
 
     if (result.deletedCount === 0) {
       throw new NotFoundException(`User with ID ${userId} not found`);

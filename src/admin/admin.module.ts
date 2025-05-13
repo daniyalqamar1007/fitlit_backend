@@ -7,10 +7,17 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { User, UserSchema } from '../user/schemas/user.schema';
 import { UserModule } from '../user/user.module';
+import { Avatar, AvatarSchema } from 'src/avatar/schemas/avatar.schema';
+import { WardrobeItem, WardrobeItemSchema } from 'src/wardrobe/schemas/wardrobe.schema';
+
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Avatar.name, schema: AvatarSchema },
+      { name: WardrobeItem.name, schema: WardrobeItemSchema },
+    ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
