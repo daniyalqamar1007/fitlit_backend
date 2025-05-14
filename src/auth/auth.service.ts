@@ -30,7 +30,7 @@ export class AuthService {
 
       const otp = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit OTP
 
-      await this.mailerService.sendOtpEmail(dto.email, otp, dto.name);
+      await this.mailerService.sendOtpEmail(dto.email, otp);
       return {
         otp,
         message: 'OTP sent to your email. Complete signup after verifying OTP.',

@@ -1,25 +1,27 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Types, Document } from 'mongoose';
+import { Document } from 'mongoose';
 
-@Schema({ timestamps: { createdAt: 'created_at' } })
-export class Avatar extends Document {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  user_id: Types.ObjectId;
+export type AvatarDocument = Avatar & Document;
 
-  @Prop({ type: Types.ObjectId, ref: 'Wardrobe' })
-  shirt_id: Types.ObjectId;
+@Schema()
+export class Avatar {
+  @Prop({ required: true })
+  shirt_id: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Wardrobe' })
-  pant_id: Types.ObjectId;
+  @Prop({ required: true })
+  pant_id: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Wardrobe' })
-  shoe_id: Types.ObjectId;
+  @Prop({ required: true })
+  shoe_id: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Wardrobe' })
-  accessory_id: Types.ObjectId;
+  @Prop({ required: true })
+  accessory_id: string;
 
-  @Prop({ type: String }) // URL from ChatGPT image generation
-  avatar_url: string;
+  @Prop({ required: true })
+  avatarUrl: string;
+
+  @Prop({ required: true })
+  date: string; // Format: dd/mm/yyyy
 }
 
 export const AvatarSchema = SchemaFactory.createForClass(Avatar);

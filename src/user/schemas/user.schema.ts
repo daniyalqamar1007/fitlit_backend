@@ -2,7 +2,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-export type UserDocument = User & Document;
+
+export type UserDocument = User &
+  Document & {
+    createdAt: Date;
+    updatedAt: Date;
+  };
 
 @Schema({ timestamps: true })
 export class User {
@@ -30,18 +35,3 @@ export class User {
 
 
 export const UserSchema = SchemaFactory.createForClass(User);
-// import { Schema } from 'mongoose';
-
-// export const UserSchema = new Schema(
-//   {
-//     userId: { type: Number, unique: true },
-//     name: String,
-//     email: { type: String, unique: true, required: true },
-//     password: String,
-//     phoneNumber: String,
-//     profilePhoto: String,
-//     role: { type: String, enum: ['user', 'admin'], default: 'user' },
-//     gender: { type: String, enum: ['male', 'female', 'other'] },
-//   },
-//   { timestamps: true },
-// );

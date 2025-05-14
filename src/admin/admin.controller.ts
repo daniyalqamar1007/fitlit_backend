@@ -12,11 +12,14 @@ import {
 import { AdminService } from './admin.service';
 import { AdminAuthGuard } from './guards/admin-auth.guard';
 import { QueryParamsDto, AdminUserResponseDto } from './dto/admin-user.dto';
+import { UserDocument } from 'src/user/schemas/user.schema';
 
 @Controller('admin')
 @UseGuards(AdminAuthGuard)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+  ) {}
 
   @Get('users')
   async getAllUsers(@Query() queryParams: QueryParamsDto) {
@@ -28,6 +31,21 @@ export class AdminController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<AdminUserResponseDto> {
     return this.adminService.getUserById(id);
+  }
+
+  @Get('new-users')
+  async getNewUsers(@Query('days') days: number = 7) {
+    const newUsers = await this.adminService.getNewUsers(days);
+
+    return {
+      count: newUsers.length,
+      users: newUsers.map((user: UserDocument) => ({
+        userId: user.userId,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+      })),
+    };
   }
 
   @Delete('users/:userId')
