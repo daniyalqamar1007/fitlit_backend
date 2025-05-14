@@ -1,15 +1,23 @@
-import { IsString } from 'class-validator';
+import { IsDateString, IsString, Matches } from 'class-validator';
 
 export class CreateAvatarDto {
   @IsString()
-  shirtUrl: string;
+  shirt_id: string;
 
   @IsString()
-  pantUrl: string;
+  pant_id: string;
 
   @IsString()
-  shoeUrl: string;
+  shoe_id: string;
 
   @IsString()
-  accessoryUrl: string;
+  accessory_id: string;
+
+  @IsString()
+  avatarUrl: string;
+
+  @Matches(/^\d{2}\/\d{2}\/\d{4}$/, {
+    message: 'date must be in dd/mm/yyyy format',
+  })
+  date: string;
 }
