@@ -51,9 +51,9 @@ export class AdminService {
     // Build filter based on query parameters
     const filter: any = {};
 
-    if (emailVerified !== undefined) {
-      filter.emailVerified = emailVerified;
-    }
+    // if (emailVerified !== undefined) {
+    //   filter.emailVerified = emailVerified;
+    // }
 
     if (searchTerm) {
       filter.$or = [
@@ -72,8 +72,20 @@ export class AdminService {
 
     const total = await this.userModel.countDocuments(filter);
 
+    const usersWithAvatarCount = await Promise.all(
+      users.map(async (user) => {
+        const avatarCount = await this.avatarModel
+          .countDocuments({ user_id: user.userId })
+          .exec();
+        return {
+          ...this.mapToAdminUserResponse(user),
+          avatarCount,
+        };
+      }),
+    );
+
     return {
-      users: users.map((user) => this.mapToAdminUserResponse(user)),
+      users: usersWithAvatarCount,
       total,
       page: Number(page),
       limit: Number(limit),
