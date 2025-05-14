@@ -15,10 +15,10 @@ export class AwsService {
   private bucketName: string;
   constructor(private configService: ConfigService) {
     this.s3 = new S3Client({
-      region: process.env.AWS_BUCKET_REGION,
+      region: process.env.UPLOAD_BUCKET_REGION,
       credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY!,
-        secretAccessKey: process.env.AWS_SECRET_KEY!,
+        accessKeyId: process.env.UPLOAD_ACCESS_KEY!,
+        secretAccessKey: process.env.UPLOAD_SECRET_KEY!,
       },
     });
     this.bucketName = process.env.S3_BUCKET_NAME!;
