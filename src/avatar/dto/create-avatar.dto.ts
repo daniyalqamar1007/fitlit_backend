@@ -2,6 +2,9 @@ import { IsDateString, IsString, Matches } from 'class-validator';
 
 export class CreateAvatarDto {
   @IsString()
+  index: string;
+
+  @IsString()
   shirt_id: string;
 
   @IsString()

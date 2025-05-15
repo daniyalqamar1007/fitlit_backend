@@ -42,11 +42,13 @@ export class AvatarService {
       return {
         success: true,
         avatarUrl: avatar.avatarUrl,
+        index:avatar.index || "1",
       };
     } else {
       return {
         success: false,
         message: 'Not saved yet',
+        index:1
       };
     }
   }

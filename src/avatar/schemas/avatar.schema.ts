@@ -5,6 +5,9 @@ export type AvatarDocument = Avatar & Document;
 
 @Schema()
 export class Avatar {
+  @Prop({ required: false })
+  index: string;
+  
   @Prop({ required: true })
   shirt_id: string;
 
