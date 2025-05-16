@@ -39,7 +39,6 @@ export class UserController {
     @Body() updateProfileDto: UpdateProfileDto,
     @UploadedFile() file?: Multer.File,
   ) {
-    console.log('file is get ', file);
     const userId = req.user.userId;
     const updateData: UpdateProfileDto = { ...updateProfileDto };
 
@@ -47,11 +46,8 @@ export class UserController {
     if (file) {
       try {
         // Upload to AWS S3
-        console.log('uploading to aws bucket', file);
-
         const imageUrl = await this.awsService.uploadFile(file, userId);
         updateData.profilePicture = imageUrl;
-        console.log('image is uploaded and url', file, imageUrl);
       } catch (error) {
         throw new BadRequestException(
           'Failed to upload image: ' + error.message,

@@ -10,7 +10,6 @@ import { Avatar, AvatarSchema } from './schemas/avatar.schema';
   imports: [
     MongooseModule.forFeature([{ name: Avatar.name, schema: AvatarSchema }]),
   ],
-  // imports: [MulterModule.register()],
   controllers: [AvatarController],
   providers: [AvatarService],
   exports: [AvatarService],

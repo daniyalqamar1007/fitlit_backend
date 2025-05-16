@@ -11,6 +11,7 @@ import { CounterService } from '../common/services/counter.service';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from './schemas/user.schema';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { OtpVerifyDto } from 'src/auth/dto/signup.dto/otp-verify.dto';
 
 @Injectable()
 export class UserService {
@@ -23,7 +24,7 @@ export class UserService {
     private counterService: CounterService,
   ) {}
 
-  async createUser(dto: CreateUserDto) {
+  async createUser(dto: OtpVerifyDto) {
     try {
       const userExists = await this.userModel.findOne({ email: dto.email });
       if (userExists) {
@@ -31,11 +32,11 @@ export class UserService {
       }
 
       const userId = await this.counterService.getNextSequence('user');
-      const hashedPassword = await bcrypt.hash(dto.password, 10);
+      // const hashedPassword = await bcrypt.hash(dto.password, 10);
 
       const user = new this.userModel({
         ...dto,
-        password: hashedPassword,
+        // password: hashedPassword,
         userId,
       });
 
