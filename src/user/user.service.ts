@@ -2,13 +2,15 @@ import {
   Injectable,
   InternalServerErrorException,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from '../auth/dto/signup.dto/signup.dto';
 import { CounterService } from '../common/services/counter.service';
 import * as bcrypt from 'bcrypt';
-import { UserDocument } from './schemas/user.schema';
+import { User, UserDocument } from './schemas/user.schema';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UserService {
@@ -56,5 +58,42 @@ export class UserService {
 
   async findAll(): Promise<UserDocument[]> {
     return this.userModel.find().exec();
+  }
+
+  async findByIdForProfile(id: string): Promise<Partial<User>> {
+    const user = await this.userModel.findOne({ userId: id }).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return {
+      email: user.email,
+      name: user.name,
+      gender: user.gender,
+      profilePicture: user.profilePicture || null,
+    };
+  }
+
+  async updateProfile(
+    id: string,
+    updateProfileDto: UpdateProfileDto,
+  ): Promise<Partial<User>> {
+    const user = await this.userModel
+      .findOneAndUpdate(
+        { userId: id },
+        { $set: updateProfileDto },
+        { new: true },
+      )
+      .exec();
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      name: user.name,
+      email: user.email,
+      gender: user.gender,
+      profilePicture: user.profilePicture || null,
+    };
   }
 }
