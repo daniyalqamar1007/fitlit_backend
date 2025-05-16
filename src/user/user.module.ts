@@ -4,6 +4,8 @@ import { UserService } from './user.service';
 import { UserSchema } from './schemas/user.schema';
 import { CounterService } from '../common/services/counter.service';
 import { CounterSchema } from '../common/schemas/counter.schemas';
+import { UserController } from './user.controller';
+import { AwsService } from '../aws/aws.service';
 
 @Module({
   imports: [
@@ -12,7 +14,9 @@ import { CounterSchema } from '../common/schemas/counter.schemas';
       { name: 'Counter', schema: CounterSchema },
     ]),
   ],
-  providers: [UserService, CounterService],
+  controllers: [UserController],
+
+  providers: [UserService, CounterService,AwsService],
   exports: [UserService],
 })
 export class UserModule {}

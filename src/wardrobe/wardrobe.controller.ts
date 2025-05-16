@@ -21,11 +21,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { WardrobeItemCategory } from './schemas/wardrobe.schema';
 import { AwsService } from '../aws/aws.service';
 import * as Multer from 'multer';
-interface RequestWithUser extends Request {
-  user: {
-    userId: string;
-  };
-}
+import { RequestWithUser } from 'src/interfaces/interface';
+
 
 @Controller('wardrobe-items')
 export class WardrobeController {

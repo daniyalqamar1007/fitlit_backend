@@ -20,9 +20,15 @@ export class User {
   @Prop({ required: true, unique: true })
   email: string;
 
+  @Prop({ required: true,  })
+  gender: string;
+
   @Prop({ required: true })
   password: string;
 
+  @Prop({ required: true })
+  profilePicture: string;
+  
   @Prop({ default: false })
   isAdmin: boolean; // Added isAdmin flag to identify admin users
 }
