@@ -23,22 +23,60 @@ export class AwsService {
     });
     this.bucketName = process.env.S3_BUCKET_NAME!;
   }
-  async uploadFile(file: Multer.File, userId: string): Promise<string> {
-    const fileKey = `wardrobe/${userId}/${Date.now()}-${file.originalname}`;
+  // async uploadFile(base64: any, file?: Multer.File): Promise<string> {
+  //   const fileKey = `wardrobe/${Date.now()}-${file?.originalname || 'image.png'}`;
+
+  //   // Remove the base64 header if it exists (optional safety step)
+  //   const base64Data = base64.replace(/^data:image\/\w+;base64,/, '');
+
+  //   const buffer = Buffer.from(base64Data, 'base64'); // ✅ convert to binary buffer
+
+  //   const command = new PutObjectCommand({
+  //     Bucket: this.bucketName,
+  //     Key: fileKey,
+  //     Body: buffer, // ✅ use buffer, not base64 string
+  //     ContentType: file?.mimetype || 'image/png',
+  //     // ACL: 'public-read', // optional
+  //   });
+
+  //   await this.s3.send(command);
+
+  //   return `https://${this.bucketName}.s3.${this.configService.get<string>('AWS_BUCKET_REGION')}.amazonaws.com/${fileKey}`;
+  // }
+
+  // async uploadFile(buffer: any, file?:  Multer.File ): Promise<string> {
+  //   const fileKey = `wardrobe/${Date.now()}-${file.originalname}`;
+
+  //   const command = new PutObjectCommand({
+  //     Bucket: this.bucketName,
+  //     Key: fileKey,
+  //     Body: buffer,
+  //     ContentType: file.mimetype,
+  //     // ACL: 'public-read', // Make the file publicly accessible
+  //   });
+
+  //   await this.s3.send(command);
+
+  //   // Generate the public URL
+  //   return `https://${this.bucketName}.s3.${this.configService.get<string>('AWS_BUCKET_REGION')}.amazonaws.com/${fileKey}`;
+  // }
+
+  async uploadFile(buffer: Buffer, file?: Multer.File): Promise<string> {
+    const fileKey = `wardrobe/${Date.now()}-${file?.originalname || 'image.png'}`;
 
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
       Key: fileKey,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-      // ACL: 'public-read', // Make the file publicly accessible
+      Body: buffer, // Already a buffer — no conversion needed
+      ContentType: file?.mimetype || 'image/png',
+      // ACL: 'public-read', // optional
     });
 
     await this.s3.send(command);
 
-    // Generate the public URL
     return `https://${this.bucketName}.s3.${this.configService.get<string>('AWS_BUCKET_REGION')}.amazonaws.com/${fileKey}`;
   }
+
   async generateSignedUrl(
     fileName: string,
     contentType: string,

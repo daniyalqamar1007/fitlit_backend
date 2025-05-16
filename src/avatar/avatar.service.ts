@@ -7,6 +7,8 @@ import OpenAI from 'openai';
 import { Model } from 'mongoose';
 import { Avatar, AvatarDocument } from './schemas/avatar.schema';
 import { InjectModel } from '@nestjs/mongoose';
+import * as Multer from 'multer';
+
 @Injectable()
 export class AvatarService {
   @InjectModel(Avatar.name) private avatarModel: Model<AvatarDocument>;
@@ -24,7 +26,6 @@ export class AvatarService {
       );
     }
   }
-  //   constructor(private openai: OpenaiService) {}
   async saveavatar(dto: CreateAvatarDto) {
     try {
       const created = new this.avatarModel(dto);
@@ -42,17 +43,18 @@ export class AvatarService {
       return {
         success: true,
         avatarUrl: avatar.avatarUrl,
-        index:avatar.index || "1",
+        index: avatar.index || '1',
       };
     } else {
       return {
         success: false,
         message: 'Not saved yet',
-        index:1
+        index: 1,
       };
     }
   }
-  async test(filePath: string) {
+
+  async test(filePath: string, prompt?: string) {
     try {
       // Read the file as a buffer
       const imageBuffer = fs.readFileSync(filePath);
@@ -63,12 +65,16 @@ export class AvatarService {
       const rsp = await this.openai.images.edit({
         model: 'gpt-image-1',
         image: imageFile,
-        prompt: 'Create a lovely gift basket with this item in it',
+        prompt:
+          prompt ||
+          'Turn this face into a digital avatar with flat vector style, clean lines, and expressive but simple features',
       });
       if (rsp.data) {
         const image_base64: any = rsp.data[0].b64_json;
-        const image_bytes = Buffer.from(image_base64, 'base64');
-        fs.writeFileSync('basket.png', image_bytes);
+        return Buffer.from(image_base64, 'base64');
+
+        // const outputPath = path.join(__dirname, '..', '..', 'uploads', 'basket.png');
+        // fs.writeFileSync(outputPath, image_bytes);
       }
       // Save the edited image to a file
 
@@ -80,6 +86,7 @@ export class AvatarService {
     }
   }
 }
+
 class FileLike extends Blob {
   lastModified: number;
   name: string;

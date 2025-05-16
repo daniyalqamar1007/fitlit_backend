@@ -6,10 +6,14 @@ import { UserModule } from '../user/user.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { MailerModule } from '../mailer/mailer.module'; // ✅ your local module, not @nestjs-modules/mailer
+import { MailerModule } from '../mailer/mailer.module'; 
+import { AwsService } from 'src/aws/aws.service';
+import { AvatarService } from 'src/avatar/avatar.service';
+import { AvatarModule } from 'src/avatar/avatar.module';
 
 @Module({
   imports: [
+    AvatarModule,
     UserModule,
     PassportModule,
     JwtModule.register({
@@ -18,9 +22,9 @@ import { MailerModule } from '../mailer/mailer.module'; // ✅ your local module
         expiresIn: '7d',
       },
     }),
-    MailerModule, 
+    MailerModule,
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, AwsService],
   controllers: [AuthController],
   exports: [AuthService],
 })

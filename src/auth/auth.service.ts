@@ -1,3 +1,5 @@
+import { AvatarService } from 'src/avatar/avatar.service';
+import { AwsService } from 'src/aws/aws.service';
 import {
   Injectable,
   BadRequestException,
@@ -13,6 +15,11 @@ import * as bcrypt from 'bcrypt';
 import { AppMailerService } from '../mailer/mailer.service';
 import { ForgotPasswordDto } from './dto/forgotpassword.dto/forgotpassword.dto';
 import { ResetPasswordDto } from './dto/resetpassword.dto/resetpassword.dto';
+import * as Multer from 'multer';
+import * as axios from 'axios';
+import { OtpVerifyDto } from './dto/signup.dto/otp-verify.dto';
+
+
 
 
 @Injectable()
@@ -20,9 +27,22 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private AwsService: AwsService,
     private mailerService: AppMailerService,
+    private AvatarService : AvatarService,
   ) {}
 
+  async fetchImageBufferOrBase64(
+    imageUrl: string,
+    asBase64 = true,
+  ): Promise<string | Buffer> {
+    const response: any = await axios.get(imageUrl, {
+      responseType: 'arraybuffer',
+    });
+    const buffer = Buffer.from(response.data, 'binary');
+
+    return asBase64 ? buffer.toString('base64') : buffer;
+  }
   async generateOtp(dto: CreateUserDto) {
     try {
       const existing = await this.userService.findByEmail(dto.email);
@@ -43,12 +63,31 @@ export class AuthService {
     }
   }
 
-  async completeSignup(dto: CreateUserDto) {
+  async completeSignup(dto: OtpVerifyDto, file: Multer.file) {
+    // console.log(file.path);
+    // console.log(dto)
+    // return file
     try {
+      const buffer: any = await this.AvatarService.test(file.path);
+      // console.log('openai buffer', buffer)
+      // const buffer = await this.fetchImageBufferOrBase64(
+      //   'https://images.pexels.com/photos/31588241/pexels-photo-31588241/free-photo-of-classic-cadillac-car-front-in-las-vegas.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+      // );
+
+      // console.log(buffer)
+
+      // Upload to AWS S3
+      const imageUrl = await this.AwsService.uploadFile(buffer, file);
+
+      // console.log(imageUrl);
+
       const existing = await this.userService.findByEmail(dto.email);
       if (existing) throw new BadRequestException('Email already registered');
 
-      const user = await this.userService.createUser(dto);
+      const user = await this.userService.createUser({
+        ...dto,
+        profilePicture: imageUrl,
+      });
 
       const token = this.generateToken(user);
 

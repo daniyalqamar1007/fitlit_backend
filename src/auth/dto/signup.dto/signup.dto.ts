@@ -9,9 +9,9 @@ import {
 import { Transform } from 'class-transformer';
 
 export class CreateUserDto {
-  @IsNotEmpty()
-  @Transform(({ value }) => value.trim())
-  name: string;
+  // @IsNotEmpty()
+  // @Transform(({ value }) => value.trim())
+  // name: string;
 
   @IsEmail({}, { message: 'Please provide a valid email address' })
   @Matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, {
@@ -20,18 +20,18 @@ export class CreateUserDto {
   @Transform(({ value }) => value.trim())
   email: string;
 
-  @MinLength(6)
-  @Transform(({ value }) => value.trim())
-  password: string;
+  // @MinLength(6)
+  // @Transform(({ value }) => value.trim())
+  // password: string;
 
-  @IsOptional()
-  @Transform(({ value }) => value?.trim())
-  phoneNumber?: string;
+  // @IsOptional()
+  // @Transform(({ value }) => value?.trim())
+  // phoneNumber?: string;
 
-  @IsOptional()
-  profilePhoto?: string;
+  // @IsOptional()
+  // profilePicture?: string;
 
-  @IsOptional()
-  @IsEnum(['male', 'female', 'other'])
-  gender?: string;
+  // @IsOptional()
+  // @IsEnum(['male', 'female', 'other'])
+  // gender?: string;
 }
