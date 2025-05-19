@@ -77,6 +77,20 @@ export class AwsService {
     return `https://${this.bucketName}.s3.${this.configService.get<string>('AWS_BUCKET_REGION')}.amazonaws.com/${fileKey}`;
   }
 
+  async uploadFileDress(file: Multer.File, userId: string): Promise<string> {
+    const fileKey = `wardrobe/${userId}/${Date.now()}-${file.originalname}`;
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: fileKey,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+      // ACL: 'public-read', // Make the file publicly accessible
+    });
+    await this.s3.send(command);
+    // Generate the public URL
+    return `https://${this.bucketName}.s3.${this.configService.get<string>('AWS_BUCKET_REGION')}.amazonaws.com/${fileKey}`;
+  }
+
   async generateSignedUrl(
     fileName: string,
     contentType: string,

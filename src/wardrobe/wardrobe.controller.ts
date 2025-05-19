@@ -1,3 +1,4 @@
+import { AvatarService } from 'src/avatar/avatar.service';
 import {
   Controller,
   Get,
@@ -29,6 +30,7 @@ export class WardrobeController {
   constructor(
     private readonly wardrobeService: WardrobeService,
     private readonly awsS3Service: AwsService,
+    private readonly avatarService: AvatarService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -38,6 +40,7 @@ export class WardrobeController {
     @Req() req: RequestWithUser,
     @Body() createWardrobeItemDto: CreateWardrobeItemDto,
     @UploadedFile() file: Multer.File,
+    @UploadedFile() avatarfile: Multer.File,
   ) {
     if (!file) {
       throw new BadRequestException('Image file is required');
@@ -45,8 +48,11 @@ export class WardrobeController {
 
     const userId = req.user.userId;
 
+    // const buffer: any = await this.avatarService.test(file.path);
+    // const bufferavatar: any = await this.avatarService.test(avatarfile.path);
+
     // Upload file to AWS S3
-    const imageUrl = await this.awsS3Service.uploadFile(file, userId);
+    const imageUrl = await this.awsS3Service.uploadFileDress(file, userId);
 
     // Add image URL to the DTO
     const wardrobeItemData = {
