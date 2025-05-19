@@ -55,8 +55,8 @@ export class WardrobeItem extends Document {
   user_id: Number;
   
 
-  @Prop({ type: String, required: true, enum: WardrobeItemCategory })
-  category: WardrobeItemCategory;
+  @Prop({ type: String, required: true })
+  category: string;
 
   @Prop({ type: String, required: true })
   sub_category: string;

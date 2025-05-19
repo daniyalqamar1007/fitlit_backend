@@ -85,6 +85,10 @@ export class AvatarService {
       return false;
     }
   }
+
+
+
+  
 }
 
 class FileLike extends Blob {

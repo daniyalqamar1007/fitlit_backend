@@ -84,9 +84,13 @@ export class AuthService {
       const existing = await this.userService.findByEmail(dto.email);
       if (existing) throw new BadRequestException('Email already registered');
 
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+       
       const user = await this.userService.createUser({
         ...dto,
         profilePicture: imageUrl,
+        password: hashedPassword,
       });
 
       const token = this.generateToken(user);
