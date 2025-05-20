@@ -32,7 +32,7 @@ export class WardrobeService {
 
   async findAll(
     userId?: string,
-    category?: WardrobeItemCategory,
+    category?: string,
     subCategory?: string,
   ): Promise<WardrobeItem[]> {
     const query: any = {};

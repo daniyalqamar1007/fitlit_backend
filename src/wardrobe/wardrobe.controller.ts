@@ -30,7 +30,7 @@ export class WardrobeController {
   constructor(
     private readonly wardrobeService: WardrobeService,
     private readonly awsS3Service: AwsService,
-    private readonly avatarService: AvatarService,
+    // private readonly avatarService: AvatarService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -67,7 +67,7 @@ export class WardrobeController {
   @Get()
   findAll(
     @Req() req: RequestWithUser,
-    @Query('category') category?: WardrobeItemCategory,
+    @Query('category') category?: string,
     @Query('subCategory') subCategory?: string,
   ) {
     const userId = req.user.userId;
