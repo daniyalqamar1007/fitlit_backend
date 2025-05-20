@@ -26,11 +26,14 @@ export class AvatarService {
       );
     }
   }
-  async saveavatar(dto: CreateAvatarDto) {
+  async saveavatar(dto: CreateAvatarDto, userId: string) {
     try {
-      const created = new this.avatarModel(dto);
+      const created = new this.avatarModel({ ...dto, user_id: userId });
       await created.save();
-      return { success: true, message: 'Avatar saved successfully' };
+      return {
+        success: true,
+        message: 'Avatar saved successfully',
+      };
     } catch (error) {
       throw new Error(`Failed to save avatar: ${error.message}`);
     }
@@ -85,10 +88,6 @@ export class AvatarService {
       return false;
     }
   }
-
-
-
-  
 }
 
 class FileLike extends Blob {
