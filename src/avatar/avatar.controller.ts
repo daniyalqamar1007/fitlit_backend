@@ -1,4 +1,3 @@
-
 import {
   Post,
   Controller,
@@ -15,7 +14,6 @@ import { multerOptions, UploadedFileType } from 'src/aws/aws.multer.config'; // 
 import { AvatarService } from './avatar.service';
 import { CreateAvatarDto } from './dto/create-avatar.dto';
 
-
 @Controller('avatar')
 export class AvatarController {
   constructor(private readonly avatarService: AvatarService) {}
@@ -29,6 +27,7 @@ export class AvatarController {
   async checkAvailability(@Query('date') date: string) {
     return this.avatarService.checkAvailability(date);
   }
+
   @Post('test')
   @UseInterceptors(FileInterceptor('file', multerOptions))
   async test(@UploadedFile() file: UploadedFileType) {
@@ -37,7 +36,7 @@ export class AvatarController {
     }
     console.log(file.path);
     try {
-      return this.avatarService.test(file.path);
+      return this.avatarService.getSignupAvatar(file.path);
     } catch (error) {
       console.error(error);
       throw new HttpException(

@@ -68,7 +68,7 @@ export class AwsService {
       Bucket: this.bucketName,
       Key: fileKey,
       Body: buffer, // Already a buffer — no conversion needed
-      ContentType: file?.mimetype || 'image/png',
+      ContentType: 'image/png',
       // ACL: 'public-read', // optional
     });
 

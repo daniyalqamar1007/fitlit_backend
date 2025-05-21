@@ -10,7 +10,7 @@ import { UserService } from '../user/user.service';
 import { CreateUserDto } from './dto/signup.dto/signup.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/signin.dto/signin.dto';
-;
+
 import * as bcrypt from 'bcrypt';
 import { AppMailerService } from '../mailer/mailer.service';
 import { ForgotPasswordDto } from './dto/forgotpassword.dto/forgotpassword.dto';
@@ -68,28 +68,32 @@ export class AuthService {
     // console.log(dto)
     // return file
     try {
-      const buffer: any = await this.AvatarService.test(file.path);
+      const buffer: any = await this.AvatarService.getSignupAvatar(file.path);
       // console.log('openai buffer', buffer)
       // const buffer = await this.fetchImageBufferOrBase64(
       //   'https://images.pexels.com/photos/31588241/pexels-photo-31588241/free-photo-of-classic-cadillac-car-front-in-las-vegas.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
       // );
 
-      // console.log(buffer)
+      console.log(buffer);
 
       // Upload to AWS S3
       const imageUrl = await this.AwsService.uploadFile(buffer, file);
 
-      // console.log(imageUrl);
+      console.log(imageUrl);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const existing = await this.userService.findByEmail(dto.email);
+      console.log(existing);
       if (existing) throw new BadRequestException('Email already registered');
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-       
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const user = await this.userService.createUser({
         ...dto,
         profilePicture: imageUrl,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         password: hashedPassword,
       });
 
@@ -97,6 +101,7 @@ export class AuthService {
 
       return {
         message: 'Signup successful',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         userId: user.userId,
         access_token: token,
       };

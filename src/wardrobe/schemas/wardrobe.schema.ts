@@ -52,8 +52,7 @@ export class WardrobeItem extends Document {
     ref: 'User',
     required: true,
   })
-  user_id: Number;
-  
+  user_id: number;
 
   @Prop({ type: String, required: true })
   category: string;
@@ -63,6 +62,9 @@ export class WardrobeItem extends Document {
 
   @Prop({ type: String, required: true })
   image_url: string;
+
+  @Prop({ type: String, required: true })
+  avatar_url: string;
 }
 
 export const WardrobeItemSchema = SchemaFactory.createForClass(WardrobeItem);
