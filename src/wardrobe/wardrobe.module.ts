@@ -5,6 +5,7 @@ import { WardrobeController } from './wardrobe.controller';
 import { WardrobeItem, WardrobeItemSchema } from './schemas/wardrobe.schema';
 import { AwsService } from '../aws/aws.service';
 import { ConfigModule } from '@nestjs/config';
+import { AvatarModule } from 'src/avatar/avatar.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    AvatarModule,
     MongooseModule.forFeature([
       { name: WardrobeItem.name, schema: WardrobeItemSchema },
     ]),

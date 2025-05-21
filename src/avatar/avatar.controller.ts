@@ -1,4 +1,3 @@
-
 import {
   Post,
   Controller,
@@ -19,7 +18,6 @@ import { CreateAvatarDto } from './dto/create-avatar.dto';
 import { RequestWithUser } from 'src/interfaces/interface';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
-
 @Controller('avatar')
 export class AvatarController {
   constructor(private readonly avatarService: AvatarService) {}
@@ -37,6 +35,7 @@ export class AvatarController {
   async checkAvailability(@Query('date') date: string) {
     return this.avatarService.checkAvailability(date);
   }
+
   @Post('test')
   @UseInterceptors(FileInterceptor('file', multerOptions))
   async test(@UploadedFile() file: UploadedFileType) {
@@ -45,7 +44,7 @@ export class AvatarController {
     }
     console.log(file.path);
     try {
-      return this.avatarService.test(file.path);
+      return this.avatarService.getSignupAvatar(file.path);
     } catch (error) {
       console.error(error);
       throw new HttpException(

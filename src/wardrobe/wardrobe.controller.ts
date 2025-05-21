@@ -4,7 +4,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseGuards,
@@ -15,52 +14,54 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Express } from 'express';
 import { WardrobeService } from './wardrobe.service';
-import { CreateWardrobeItemDto } from './dto/create-wardrobe.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { WardrobeItemCategory } from './schemas/wardrobe.schema';
 import { AwsService } from '../aws/aws.service';
 import * as Multer from 'multer';
 import { RequestWithUser } from 'src/interfaces/interface';
-
+import { multerOptions } from 'src/aws/aws.multer.config';
 
 @Controller('wardrobe-items')
 export class WardrobeController {
   constructor(
     private readonly wardrobeService: WardrobeService,
     private readonly awsS3Service: AwsService,
-    // private readonly avatarService: AvatarService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('file', multerOptions))
   async create(
     @Req() req: RequestWithUser,
-    @Body() createWardrobeItemDto: CreateWardrobeItemDto,
+    @Body() createWardrobeItemDto: any,
     @UploadedFile() file: Multer.File,
-    @UploadedFile() avatarfile: Multer.File,
   ) {
     if (!file) {
       throw new BadRequestException('Image file is required');
     }
-
     const userId = req.user.userId;
 
-    // const buffer: any = await this.avatarService.test(file.path);
-    // const bufferavatar: any = await this.avatarService.test(avatarfile.path);
+    console.log(userId);
 
+    // console.log(response1);
+    // if (!response1 || typeof response1 === 'boolean') {
+    //   throw new BadRequestException('Failed to generate avatar buffer');
+    // }
+    // const imageUrl1 = await this.awsS3Service.uploadFile(response1, file);
+    // const imageUrl2 = await this.awsS3Service.uploadFile(response2);
+
+    // console.log(imageUrl1);
     // Upload file to AWS S3
-    const imageUrl = await this.awsS3Service.uploadFileDress(file, userId);
+    // const imageUrl = await this.awsS3Service.uploadFileDress(file, userId);
 
     // Add image URL to the DTO
-    const wardrobeItemData = {
-      ...createWardrobeItemDto,
-      image_url: imageUrl,
-    };
+    // const wardrobeItemData = {
+    //   ...createWardrobeItemDto,
+    //   image_url: imageUrl,
+    // };
 
-    return this.wardrobeService.create(userId, wardrobeItemData);
+    return this.wardrobeService.create(userId, createWardrobeItemDto, file);
   }
 
   @UseGuards(JwtAuthGuard)

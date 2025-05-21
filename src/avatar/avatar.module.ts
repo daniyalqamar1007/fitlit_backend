@@ -14,4 +14,4 @@ import { Avatar, AvatarSchema } from './schemas/avatar.schema';
   providers: [AvatarService],
   exports: [AvatarService],
 })
-export class AvatarModule {} 
+export class AvatarModule {}

@@ -16,12 +16,17 @@ import { AwsService } from 'src/aws/aws.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RequestWithUser } from '../interfaces/interface';
 import * as Multer from 'multer';
+import { AvatarService } from 'src/avatar/avatar.service';
+import * as fs from 'fs';
+import { unlink } from 'fs/promises';
+import { multerOptions } from 'src/aws/aws.multer.config';
 
 @Controller('user')
 export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly awsService: AwsService,
+    private readonly AvatarService: AvatarService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -33,7 +38,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('profile')
-  @UseInterceptors(FileInterceptor('profilePicture'))
+  @UseInterceptors(FileInterceptor('profilePicture', multerOptions))
   async updateProfile(
     @Req() req: RequestWithUser,
     @Body() updateProfileDto: UpdateProfileDto,
@@ -42,18 +47,33 @@ export class UserController {
     const userId = req.user.userId;
     const updateData: UpdateProfileDto = { ...updateProfileDto };
 
-    // If a file was uploaded, process it
-    if (file) {
-      try {
-        // Upload to AWS S3
-        const imageUrl = await this.awsService.uploadFile(file, userId);
-        updateData.profilePicture = imageUrl;
-      } catch (error) {
-        throw new BadRequestException(
-          'Failed to upload image: ' + error.message,
-        );
+    try {
+      if (file && updateData.onProfileChange === 'yes') {
+        try {
+          console.log(file);
+          const buffer: any = await this.AvatarService.getSignupAvatar(
+            file.path,
+          );
+          const imageUrl = await this.awsService.uploadFile(buffer, file);
+          updateData.profilePicture = imageUrl;
+        } catch (error) {
+          throw new BadRequestException(
+            'Failed to upload image: ' + error.message,
+          );
+        }
+      }
+
+      return this.userService.updateProfile(userId, updateData);
+    } catch (e) {
+      throw new BadRequestException('Failed to upload image: ' + e.message);
+    } finally {
+      if (file?.path) {
+        try {
+          await unlink(file.path); // delete file from disk
+        } catch (err) {
+          console.error('Failed to delete file:', err.message);
+        }
       }
     }
-    return this.userService.updateProfile(userId, updateData);
   }
 }

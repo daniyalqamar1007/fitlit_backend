@@ -4,29 +4,76 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { WardrobeItem, WardrobeItemCategory } from './schemas/wardrobe.schema';
 import { CreateWardrobeItemDto } from './dto/create-wardrobe.dto';
+import { AvatarService } from 'src/avatar/avatar.service';
+import { AwsService } from 'src/aws/aws.service';
+import * as fs from 'fs';
 
 @Injectable()
 export class WardrobeService {
   constructor(
     @InjectModel(WardrobeItem.name)
     private wardrobeItemModel: Model<WardrobeItem>,
+    private readonly avatarService: AvatarService,
+    private readonly awsS3Service: AwsService,
   ) {}
 
-  async create(
-    userId: string,
-    createWardrobeItemDto: CreateWardrobeItemDto,
-  ): Promise<WardrobeItem> {
+  async create(userId: string, createWardrobeItemDto: any, file: any) {
     try {
+      const category = createWardrobeItemDto.category;
+
+      const [
+        response1,
+         response2
+        ] = await Promise.all([
+        await this.avatarService.getUpdated3DAvatar(
+          file.path,
+          createWardrobeItemDto.category,
+          `Convert this ${category} image (a ${category}) into a detailed 3D model of the ${category}  only,
+          preserving the fabric texture, shape, and design features. Focus solely on the ${category}
+          without any background or other objects.`,
+        ),
+        await this.avatarService.generateUpdatedAvatar(
+          createWardrobeItemDto.avatar,
+          file.path,
+          category,
+        ),
+      ]);
+
+      console.log(response2);
+      if (!response1 || typeof response1 === 'boolean') {
+        throw new BadRequestException('Failed to generate avatar buffer');
+      }
+      if (!response2 || typeof response2 === 'boolean') {
+        throw new BadRequestException('Failed to generate avatar buffer');
+      }
+      const imageUrl1 = await this.awsS3Service.uploadFile(response1, file);
+      const imageUrl2 = await this.awsS3Service.uploadFile(response2);
+      console.log(imageUrl1);
+      console.log(imageUrl2);
+
       const newWardrobeItem = new this.wardrobeItemModel({
         ...createWardrobeItemDto,
         user_id: userId,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        category,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        sub_category: createWardrobeItemDto.sub_category,
+        image_url: imageUrl1,
+        avatar_url: imageUrl2,
       });
+
       return newWardrobeItem.save();
     } catch (error) {
       throw new BadRequestException(error.message);
+    } finally {
+      fs.unlink(file.path, (err: any) => {
+        if (err) {
+          console.log(err);
+        }
+      });
     }
   }
 
