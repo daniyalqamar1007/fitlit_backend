@@ -17,9 +17,7 @@ import { UserDocument } from 'src/user/schemas/user.schema';
 @Controller('admin')
 @UseGuards(AdminAuthGuard)
 export class AdminController {
-  constructor(
-    private readonly adminService: AdminService,
-  ) {}
+  constructor(private readonly adminService: AdminService) {}
 
   @Get('users')
   async getAllUsers(@Query() queryParams: QueryParamsDto) {
@@ -63,5 +61,35 @@ export class AdminController {
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<AdminUserResponseDto> {
     return this.adminService.revokeAdminAccess(userId);
+  }
+
+  @Get('wardrobe/shirts')
+  async getAllShirts() {
+    return this.adminService.getAllWardrobeItems('Shirts');
+  }
+
+  @Get('wardrobe/pants')
+  async getAllPants() {
+    return this.adminService.getAllWardrobeItems('Pants');
+  }
+
+  @Get('wardrobe/shoes')
+  async getAllShoes() {
+    return this.adminService.getAllWardrobeItems('Shoes');
+  }
+
+  @Get('wardrobe/accessories')
+  async getAllAccessories() {
+    return this.adminService.getAllWardrobeItems('Accessories');
+  }
+
+  @Get('avatars')
+  async getAllAvatars() {
+    return this.adminService.getAllAvatars();
+  }
+
+  @Get('count')
+  async getAdminCount() {
+    return this.adminService.getAdminCount();
   }
 }

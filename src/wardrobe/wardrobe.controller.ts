@@ -68,7 +68,7 @@ export class WardrobeController {
   @Get()
   findAll(
     @Req() req: RequestWithUser,
-    @Query('category') category?: WardrobeItemCategory,
+    @Query('category') category?: string,
     @Query('subCategory') subCategory?: string,
   ) {
     const userId = req.user.userId;

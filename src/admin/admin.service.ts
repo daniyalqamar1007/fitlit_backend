@@ -100,27 +100,27 @@ export class AdminService {
     }
 
     const avatars = await this.avatarModel
-      .find({ user_id: user.userId })
+      .find({ user_id: userId })
       .lean()
       .exec();
 
     const shirts = await this.wardrobeModel
-      .find({ user_id: userId, category: 'shirts' })
+      .find({ user_id: userId, category: 'Shirts' })
       .lean()
       .exec();
 
     const pants = await this.wardrobeModel
-      .find({ user_id: userId, category: 'pants' })
+      .find({ user_id: userId, category: 'Pants' })
       .lean()
       .exec();
 
     const shoes = await this.wardrobeModel
-      .find({ user_id: userId, category: 'shoes' })
+      .find({ user_id: userId, category: 'Shoes' })
       .lean()
       .exec();
 
     const accessories = await this.wardrobeModel
-      .find({ user_id: userId, category: 'accessories' })
+      .find({ user_id: userId, category: 'Accessories' })
       .lean()
       .exec();
 
@@ -184,6 +184,40 @@ export class AdminService {
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
+    };
+  }
+
+  async getAllWardrobeItems(category: string) {
+    const items = await this.wardrobeModel
+      .aggregate([{ $match: { category } }])
+      .exec();
+    console.log(items.length);
+
+    const count = await this.wardrobeModel.countDocuments({ category }).exec();
+    console.log(count);
+
+    return {
+      items,
+      count,
+    };
+  }
+
+  async getAllAvatars() {
+    const avatars = await this.avatarModel.find().lean().exec();
+
+    const count = await this.avatarModel.countDocuments().exec();
+
+    return {
+      avatars,
+      count,
+    };
+  }
+
+  async getAdminCount() {
+    const count = await this.userModel.countDocuments({ isAdmin: true }).exec();
+
+    return {
+      count,
     };
   }
 }

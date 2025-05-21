@@ -3,8 +3,16 @@ import { Document } from 'mongoose';
 
 export type AvatarDocument = Avatar & Document;
 
-@Schema()
+@Schema({collection:'avatars'})
 export class Avatar {
+
+ @Prop({
+    type: Number,
+    ref: 'User',
+    required: true,
+  })
+  user_id: Number;
+
   @Prop({ required: false })
   index: string;
   
