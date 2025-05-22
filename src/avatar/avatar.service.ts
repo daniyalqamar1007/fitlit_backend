@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { CreateAvatarDto } from './dto/create-avatar.dto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -9,6 +9,10 @@ import { Avatar, AvatarDocument } from './schemas/avatar.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import axios from 'axios';
 import * as sharp from 'sharp';
+import { AwsService } from 'src/aws/aws.service';
+import { WardrobeService } from 'src/wardrobe/wardrobe.service';
+import { WardrobeItem, WardrobeItemDocument } from 'src/wardrobe/schemas/wardrobe.schema';
+// import { WardrobeService } from 'src/wardrobe/wardrobe.service';
 
 type InputType = 'Path' | 'Buffer';
 
@@ -16,11 +20,25 @@ type InputType = 'Path' | 'Buffer';
 export class AvatarService {
   private readonly apiKey = 'vur1J4WkuezAiJUJJB78bs8R'; // Your Remove.bg API Key
 
-  @InjectModel(Avatar.name) private avatarModel: Model<AvatarDocument>;
+  // @InjectModel(Avatar.name) private avatarModel: Model<AvatarDocument>;
+  // @Inject(forwardRef(() => WardrobeService))
+  // private readonly wardropeModel: WardrobeService;
+  // @Inject(forwardRef(() => WardrobeService))
+  // private readonly wardropeModel: WardrobeService;
+
+  // private readonly awsS3Service: AwsService;
   private readonly logger = new Logger(AvatarService.name);
   private readonly openai: OpenAI;
 
-  constructor() {
+  constructor(
+    @InjectModel(Avatar.name)
+    private readonly avatarModel: Model<AvatarDocument>,
+
+    @InjectModel(WardrobeItem.name)
+    private readonly wardropeModel: Model<WardrobeItemDocument>,
+
+    private readonly awsS3Service: AwsService,
+  ) {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
@@ -299,43 +317,127 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
     }
   }
 
-  // async generateUpdatedAvatar(source1: string, source2: string, category: string) {
-  //   try {
-  //     // Download the original image
-  //     const resp: any = await axios.get(source1, { responseType: 'arraybuffer' });
-  //     const imageBuffer1 = Buffer.from(resp.data, 'binary');
-  //     const fileName1 = source1.split('/').pop() || 'image.png';
+  async generateOutfit(source1: string, source2: string, source3: string) {
+    try {
+      // const [response1, response2, response3] = await Promise.all([
+      const response1: any = await axios.get(source1, {
+        responseType: 'arraybuffer',
+      });
 
-  //     // Process the mask image to ensure it has an alpha channel
-  //     const processedMaskBuffer = await sharp(source2)
-  //       .ensureAlpha() // Adds an alpha channel if missing
-  //       .toBuffer();
-  //     const fileName2 = source2.split('/').pop() || 'mask.png';
+      const response2: any = await axios.get(source2, {
+        responseType: 'arraybuffer',
+      });
 
-  //     // Create FileLike objects for OpenAI API
-  //     const imageFile1 = new FileLike(imageBuffer1, fileName1, 'image/png');
-  //     const imageFile2 = new FileLike(processedMaskBuffer, fileName2, 'image/png');
+      const response3: any = await axios.get(source3, {
+        responseType: 'arraybuffer',
+      });
+      // ]);
 
-  //     // Send images for editing
-  //     const response = await this.openai.images.edit({
-  //       model: 'gpt-image-1',
-  //       image: imageFile1,
-  //       mask: imageFile2,
-  //       size: '1024x1536',
-  //       background: 'transparent',
-  //       prompt: `Create a new avatar identical to the original, but replace the ${category} with the provided image.`,
-  //     });
+      const imageBuffer1 = Buffer.from(response1.data, 'binary');
+      const fileName1 = source1.split('/').pop() || 'image1.png';
 
-  //     if (response.data?.[0]?.b64_json) {
-  //       return Buffer.from(response.data[0].b64_json, 'base64');
-  //     }
+      const imageBuffer2 = Buffer.from(response2.data, 'binary');
+      const fileName2 = source2.split('/').pop() || 'image2.png';
 
-  //     return false;
-  //   } catch (error) {
-  //     console.error('Error generating updated avatar:', error.message);
-  //     return false;
-  //   }
-  // }
+      const imageBuffer3 = Buffer.from(response3.data, 'binary');
+      const fileName3 = source3.split('/').pop() || 'image3.png';
+
+      // Create FileLike objects for OpenAI API
+      const imageFile1 = new FileLike(imageBuffer1, fileName1, 'image/png');
+      const imageFile2 = new FileLike(imageBuffer2, fileName2, 'image/png');
+      const imageFile3 = new FileLike(imageBuffer3, fileName3, 'image/png');
+
+      // Send images for editing
+      const response = await this.openai.images.edit({
+        model: 'gpt-image-1',
+        image: [imageFile1, imageFile2, imageFile3],
+        size: '1024x1536', // optional: may be inferred or adjusted
+        background: 'transparent',
+        quality: 'high',
+        prompt: `Transform this person into a full-body 3D digital avatar.
+Ensure clean lines, realistic proportions, soft shading, and expressive yet simple features.
+Maintain a balanced, stylized appearance suitable for virtual environments.
+Remove the background completely to make it transparent.
+Output the image in PNG format with a transparent background. 
+important Note: i atached tshirt design in mask put that tshirt on the avatar`,
+      });
+
+      if (response.data?.[0]?.b64_json) {
+        return Buffer.from(response.data[0].b64_json, 'base64');
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error generating updated avatar:', error.message);
+      return false;
+    }
+  }
+
+  async outfit(
+    dto: {
+      shirt_id: string;
+      pant_id: string;
+      shoe_id: string;
+    },
+    userId: string,
+  ) {
+    try {
+      const { shirt_id, pant_id, shoe_id } = dto;
+      const avatar = await this.avatarModel.findOne({
+        user_id: userId,
+        shirt_id,
+        pant_id,
+        shoe_id,
+      });
+      if (avatar !== null) {
+        return {
+          avatar: avatar.avatarUrl,
+        };
+      }
+      const source1 = await this.wardropeModel
+        .findOne({ _id: shirt_id })
+        .select('image_url');
+      const source2 = await this.wardropeModel
+        .findOne({ _id: pant_id })
+        .select('image_url');
+      const source3 = await this.wardropeModel
+        .findOne({ _id: shoe_id })
+        .select('image_url');
+      const generateOutfitBuffer = await this.generateOutfit(
+        source1!.image_url,
+        source2!.image_url,
+        source3!.image_url,
+      );
+      if (typeof generateOutfitBuffer === 'boolean') {
+        return {
+          success: false,
+          avatar: null,
+        };
+      }
+      const generateOutfitUrl = await this.awsS3Service.uploadFile(
+        generateOutfitBuffer,
+        userId,
+      );
+      const created = new this.avatarModel({
+        user_id: userId,
+        avatarUrl: generateOutfitUrl,
+        shirt_id: source1,
+        pant_id: source2,
+        shoe_id: source3,
+      });
+      await created.save();
+      return {
+        success: true,
+        avatar: generateOutfitUrl,
+      };
+    } catch (error) {
+      console.log(error);
+      return {
+        success: false,
+        avatar: null,
+      };
+    }
+  }
 }
 
 // FileLike class moved outside of AvatarService

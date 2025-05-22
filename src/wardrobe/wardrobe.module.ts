@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { WardrobeService } from './wardrobe.service';
 import { WardrobeController } from './wardrobe.controller';
@@ -9,11 +9,11 @@ import { AvatarModule } from 'src/avatar/avatar.module';
 
 @Module({
   imports: [
+    forwardRef(() => AvatarModule),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
-    AvatarModule,
     MongooseModule.forFeature([
       { name: WardrobeItem.name, schema: WardrobeItemSchema },
     ]),
