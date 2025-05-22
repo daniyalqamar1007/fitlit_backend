@@ -12,6 +12,8 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { WardrobeService } from './wardrobe.service';
@@ -25,7 +27,7 @@ import { multerOptions } from 'src/aws/aws.multer.config';
 @Controller('wardrobe-items')
 export class WardrobeController {
   constructor(
-    private readonly wardrobeService: WardrobeService,
+    @Inject(forwardRef(() => WardrobeService)) private readonly wardrobeService: WardrobeService,
     private readonly awsS3Service: AwsService,
   ) {}
 
@@ -81,6 +83,17 @@ export class WardrobeController {
     return this.wardrobeService.findOne(id);
   }
 
+  // @UseGuards(JwtAuthGuard)
+  // @Post('swipe')
+  // @UseInterceptors(FileInterceptor('file', multerOptions))
+  // swipe(
+  //   @Req() req: RequestWithUser,
+  //   @Body() dto: wardrobeItemSwipe,
+  //   @UploadedFile() file: Multer.File,
+  // ) {
+  //   return this.wardrobeService.swipe(req.user.userId, dto, file);
+  // }
+
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async remove(@Param('id') id: string, @Req() req: RequestWithUser) {
@@ -95,4 +108,17 @@ export class WardrobeController {
     // Then remove from database
     return this.wardrobeService.remove(id, userId);
   }
+
+  // @Delete('swipe/reset')
+  // async resetSwipe(@Req() req: RequestWithUser) {
+  //   // const userId = req.user?.userId;
+  //   // this.wardrobeService.clearSwipeState(userId);
+  //   return { message: 'Swipe history cleared.' };
+  // }
+}
+
+export interface wardrobeItemSwipe {
+  swipeCategory: string;
+  swipeAngle: string;
+  category: string;
 }

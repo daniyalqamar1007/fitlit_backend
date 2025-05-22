@@ -42,6 +42,8 @@ export enum ShoesSubCategory {
   SPORTS_SHOE = 'sports shoe',
 }
 
+
+export type WardrobeItemDocument = WardrobeItem & Document;
 @Schema({
   timestamps: true,
   collection: 'wardrobe_items',

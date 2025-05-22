@@ -45,7 +45,7 @@ export class AdminService {
     page: number;
     limit: number;
   }> {
-    const { page = 1, limit = 10, searchTerm, emailVerified } = queryParams;
+    const { page = 1, limit = 100, searchTerm, emailVerified } = queryParams;
     const skip = (page - 1) * limit;
 
     // Build filter based on query parameters
@@ -64,11 +64,13 @@ export class AdminService {
 
     const users = await this.userModel
       .find(filter)
-      .select('-password -otp -otpExpiry')
+      // .select('-password -otp -otpExpiry')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .exec();
+
+   console.log(users);
 
     const total = await this.userModel.countDocuments(filter);
 
@@ -78,14 +80,16 @@ export class AdminService {
           .countDocuments({ user_id: user.userId })
           .exec();
         return {
-          ...this.mapToAdminUserResponse(user),
+          // ...this.mapToAdminUserResponse(user),
+          user,
           avatarCount,
         };
       }),
     );
 
     return {
-      users: usersWithAvatarCount,
+      // users: usersWithAvatarCount,
+      users,
       total,
       page: Number(page),
       limit: Number(limit),

@@ -1,22 +1,56 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable no-empty */
 import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { WardrobeItem, WardrobeItemCategory } from './schemas/wardrobe.schema';
-import { CreateWardrobeItemDto } from './dto/create-wardrobe.dto';
+import { Model, Types } from 'mongoose';
+import { WardrobeItem } from './schemas/wardrobe.schema';
 import { AvatarService } from 'src/avatar/avatar.service';
 import { AwsService } from 'src/aws/aws.service';
 import * as fs from 'fs';
+import { wardrobeItemSwipe } from './wardrobe.controller';
+
+type SwipeItem = { _id: Types.ObjectId; avatar?: string };
+
+type SwipeState = {
+  leftSwipe: SwipeItem[];
+  rightSwipe: SwipeItem[];
+  index: number;
+};
+
+type UserSwipeState = {
+  shirt: SwipeState;
+  pants: SwipeState;
+  shoes: SwipeState;
+};
 
 @Injectable()
 export class WardrobeService {
+  private userSwipeState: { [userId: string]: UserSwipeState } = {};
+  // private rightShirtSwipe: { _id: Types.ObjectId; avatar?: string }[] = [];
+  // private leftShirtSwipe: { _id: Types.ObjectId; avatar?: string }[] = [];
+  // private shirtSwipeIndex = 0;
+
+  // private rightPantsSwipe: { _id: Types.ObjectId; avatar?: string }[] = [];
+  // private leftPantsSwipe: { _id: Types.ObjectId; avatar?: string }[] = [];
+  // private pantsSwipeIndex = 0;
+
+  // private rightShoesSwipe: { _id: Types.ObjectId; avatar?: string }[] = [];
+  // private leftShoesSwipe: { _id: Types.ObjectId; avatar?: string }[] = [];
+  // private shoesSwipeIndex = 0;
+
   constructor(
     @InjectModel(WardrobeItem.name)
     private wardrobeItemModel: Model<WardrobeItem>,
-    private readonly avatarService: AvatarService,
+    // private readonly avatarService: AvatarService,
+     @Inject(forwardRef(() => AvatarService))
+  private readonly avatarService: AvatarService,
     private readonly awsS3Service: AwsService,
   ) {}
 
@@ -24,10 +58,7 @@ export class WardrobeService {
     try {
       const category = createWardrobeItemDto.category;
 
-      const [
-        response1,
-         response2
-        ] = await Promise.all([
+      const [response1, response2] = await Promise.all([
         await this.avatarService.getUpdated3DAvatar(
           file.path,
           createWardrobeItemDto.category,
@@ -77,6 +108,10 @@ export class WardrobeService {
     }
   }
 
+  clearSwipeState(userId: string) {
+    delete this.userSwipeState[userId];
+  }
+
   async findAll(
     userId?: string,
     category?: string,
@@ -123,4 +158,8 @@ export class WardrobeService {
 
     return true;
   }
+}
+
+export interface SwipeResponse {
+  avatar: string | null;
 }

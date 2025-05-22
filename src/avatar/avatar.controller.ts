@@ -25,9 +25,7 @@ export class AvatarController {
   @UseGuards(JwtAuthGuard)
   @Post('save-avatar')
   async saveavatar(@Body() Dto: CreateAvatarDto, @Req() req: RequestWithUser) {
-    
     const userId = req.user.userId;
-    
     return this.avatarService.saveavatar(Dto, userId);
   }
 
@@ -45,6 +43,24 @@ export class AvatarController {
     console.log(file.path);
     try {
       return this.avatarService.getSignupAvatar(file.path);
+    } catch (error) {
+      console.error(error);
+      throw new HttpException(
+        'Background removal failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('outfit')
+  async outfit(
+    @Body()
+    dto: { shirt_id: string; pant_id: string; shoe_id: string },
+    @Req() req: RequestWithUser,
+  ) {
+    try {
+      return this.avatarService.outfit(dto, req.user?.userId);
     } catch (error) {
       console.error(error);
       throw new HttpException(
