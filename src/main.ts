@@ -1,10 +1,15 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-
+import * as http from 'http';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  
+// Set timeout to 5 minutes (300,000 ms)
+  const server = http.createServer(app.getHttpAdapter().getInstance());
+  server.setTimeout(300000); // 5 minutes
+  
   // Enable validation and transformation
   app.useGlobalPipes(
     new ValidationPipe({

@@ -53,6 +53,12 @@ export class AvatarController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('swipe-outfit')
+  async swipe(@Body() dto: any, @Req() req: RequestWithUser) {
+    return await this.avatarService.swipe(dto, req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('outfit')
   async outfit(
     @Body()
