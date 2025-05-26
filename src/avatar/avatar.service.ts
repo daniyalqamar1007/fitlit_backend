@@ -4,7 +4,7 @@ import { CreateAvatarDto } from './dto/create-avatar.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 import OpenAI from 'openai';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Avatar, AvatarDocument } from './schemas/avatar.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import axios from 'axios';
@@ -54,26 +54,38 @@ export class AvatarService {
     }
   }
   async saveavatar(dto: CreateAvatarDto, userId: string) {
-    try {
-      const created = new this.avatarModel({ ...dto, user_id: userId });
-      await created.save();
-      return {
-        success: true,
-        message: 'Avatar saved successfully',
-      };
-    } catch (error) {
-      throw new Error(`Failed to save avatar: ${error.message}`);
-    }
+  try {
+    const created = new this.avatarModel({
+      user_id: userId,
+      shirt_id: new Types.ObjectId(dto.shirt_id),
+      pant_id: new Types.ObjectId(dto.pant_id),
+      shoe_id: new Types.ObjectId(dto.shoe_id),
+      avatarUrl: dto.avatarUrl,
+      date: dto.date, // ✅ Save the incoming date
+    });
+
+    await created.save();
+
+    return {
+      success: true,
+      message: 'Avatar saved successfully',
+    };
+  } catch (error) {
+    throw new Error(`Failed to save avatar: ${error.message}`);
   }
+}
+
+  
 
   async checkAvailability(date: string) {
+    console.log(date)
     const avatar = await this.avatarModel.findOne({ date });
-
+    console.log(avatar)
     if (avatar) {
       return {
         success: true,
         avatarUrl: avatar.avatarUrl,
-        index: avatar.index || '1',
+      
       };
     } else {
       return {
@@ -356,7 +368,7 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
         image: [imageFile1, imageFile2, imageFile3],
         size: '1024x1536', // optional: may be inferred or adjusted
         background: 'transparent',
-        quality: 'high',
+        quality: 'low',
         prompt: `Transform this person into a full-body 3D digital avatar.
 Ensure clean lines, realistic proportions, soft shading, and expressive yet simple features.
 Maintain a balanced, stylized appearance suitable for virtual environments.

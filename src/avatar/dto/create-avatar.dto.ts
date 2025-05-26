@@ -2,8 +2,6 @@ import { IsString, Matches } from 'class-validator';
 
 export class CreateAvatarDto {
 
-  @IsString()
-  index: string;
 
   @IsString()
   shirt_id: string;
@@ -14,9 +12,7 @@ export class CreateAvatarDto {
   @IsString()
   shoe_id: string;
 
-  @IsString()
-  accessory_id: string;
-
+  
   @IsString()
   avatarUrl: string;
 
