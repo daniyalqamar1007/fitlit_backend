@@ -65,22 +65,22 @@ export class AuthController {
     return this.authService.resetPassword(dto);
   }
 
-  // @Delete('delete-account')
-  // @UseGuards(JwtAuthGuard)
-  // async deleteAccount(@Req() req: any) {
-  //   try {
-  //     const userId = req.user.userId || req.user.id;
-  //     const result = await this.userService.softDeleteUser(userId);
+  @Delete('delete-account')
+  @UseGuards(JwtAuthGuard)
+  async deleteAccount(@Req() req: any) {
+    try {
+      const userId = req.user.userId || req.user.id;
+      const result = await this.userService.softDeleteUser(userId);
       
-  //     return {
-  //       ...result
-  //     };
-  //   } catch (error) {
-  //     return {
-  //       success: false,
-  //       message: error.message || 'Failed to delete account'
-  //     };
-  //   }
-  // }
+      return {
+        ...result
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Failed to delete account'
+      };
+    }
+  }
 }
   
