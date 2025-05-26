@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateAvatarDto } from './dto/create-avatar.dto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -10,23 +10,27 @@ import { InjectModel } from '@nestjs/mongoose';
 import axios from 'axios';
 import * as sharp from 'sharp';
 import { AwsService } from 'src/aws/aws.service';
-import { WardrobeService } from 'src/wardrobe/wardrobe.service';
-import { WardrobeItem, WardrobeItemDocument } from 'src/wardrobe/schemas/wardrobe.schema';
-// import { WardrobeService } from 'src/wardrobe/wardrobe.service';
+import {
+  WardrobeItem,
+  WardrobeItemDocument,
+} from 'src/wardrobe/schemas/wardrobe.schema';
 
 type InputType = 'Path' | 'Buffer';
+
+interface UserSwipeState {
+  swipeIndex: number;
+  previous: { avatar: string }[];
+  next: { avatar: string }[];
+}
 
 @Injectable()
 export class AvatarService {
   private readonly apiKey = 'vur1J4WkuezAiJUJJB78bs8R'; // Your Remove.bg API Key
+  // private swipeIndex = 0;
+  // private previous = [];
+  // private next = [];
+  private userSwipeStates = new Map<string, UserSwipeState>();
 
-  // @InjectModel(Avatar.name) private avatarModel: Model<AvatarDocument>;
-  // @Inject(forwardRef(() => WardrobeService))
-  // private readonly wardropeModel: WardrobeService;
-  // @Inject(forwardRef(() => WardrobeService))
-  // private readonly wardropeModel: WardrobeService;
-
-  // private readonly awsS3Service: AwsService;
   private readonly logger = new Logger(AvatarService.name);
   private readonly openai: OpenAI;
 
@@ -187,7 +191,6 @@ Output the image in PNG format with a transparent background.`,
       console.log('Image generated successfully');
       return true;
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       console.error('Error during image processing:', error.message);
       return false;
     }
@@ -218,7 +221,7 @@ Maintain a balanced, stylized appearance suitable for virtual environments.`;
         const response: any = await axios.get(source, {
           responseType: 'arraybuffer',
         });
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         imageBuffer = Buffer.from(response.data, 'binary');
 
         // Try extracting the filename from the URL
@@ -408,9 +411,10 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
         source2!.image_url,
         source3!.image_url,
       );
+      console.log(generateOutfitBuffer);
       if (typeof generateOutfitBuffer === 'boolean') {
         return {
-          success: false,
+          // success: false,
           avatar: null,
         };
       }
@@ -418,6 +422,7 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
         generateOutfitBuffer,
         userId,
       );
+      console.log(generateOutfitUrl);
       const created = new this.avatarModel({
         user_id: userId,
         avatarUrl: generateOutfitUrl,
@@ -427,15 +432,98 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
       });
       await created.save();
       return {
-        success: true,
+        // success: true,
         avatar: generateOutfitUrl,
       };
     } catch (error) {
       console.log(error);
       return {
-        success: false,
+        // success: false,
         avatar: null,
       };
+    }
+  }
+
+  // async swipe(userId: string, dto: any) {
+  //   try {
+  //     if (dto.swipeAngle === 'left') {
+  //       // Undo - show previous swipe
+  //       if (this.swipeIndex === 0)
+  //         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  //         return { success: true, avatar: dto.avatarUrl };
+
+  //       this.swipeIndex--;
+  //       const avatar = this.previous[this.swipeIndex];
+  //       this.previous.shift();
+  //       return {
+  //         success: true,
+  //         avatar: avatar,
+  //       };
+  //     }
+
+  //     if (dto.swipeAngle === 'right') {
+  //       // First-time or next swipe - fetch new item
+  //       const wardrobeItems = await this.wardropeModel
+  //         .find({ user_id: userId })
+  //         .sort({ createdAt: -1 })
+  //         .skip(this.swipeIndex)
+  //         .limit(1);
+
+  //       if (wardrobeItems.length == 0)
+  //         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  //         return { success: true, avatar: dto.avatarUrl };
+
+  //       const item = wardrobeItems[0];
+  //       this.swipeIndex++;
+  //       this.next.push({ _id: item._id, avatar: item.avatar_url });
+
+  //       return { avatar: item.avatar_url };
+  //     }
+  //   } catch (e) {
+  //     throw new BadRequestException(e.message);
+  //   }
+  // }
+  async swipe(dto: any, userId: string) {
+    try {
+      let state = this.userSwipeStates.get(userId);
+      if (!state) {
+        state = { swipeIndex: 0, previous: [], next: [] };
+        this.userSwipeStates.set(userId, state);
+      }
+
+      if (dto.swipeAngle === 'left') {
+        if (state.swipeIndex === 0) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          return { success: true, avatar: dto.avatarUrl };
+        }
+
+        state.swipeIndex--;
+        const avatar = state.previous[state.swipeIndex];
+        state.previous.shift();
+
+        return { success: true, avatar: avatar.avatar };
+      }
+
+      if (dto.swipeAngle === 'right') {
+        const wardrobeItems = await this.avatarModel
+          .find({ user_id: userId })
+          .sort({ createdAt: -1 })
+          .skip(state.swipeIndex)
+          .limit(1);
+
+        if (wardrobeItems.length === 0) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          return { success: true, avatar: dto.avatarUrl };
+        }
+
+        const item = wardrobeItems[0];
+        state.swipeIndex++;
+        state.previous.push({ avatar: item.avatarUrl });
+
+        return { success: true, avatar: item.avatarUrl };
+      }
+    } catch (e) {
+      throw new BadRequestException(e.message);
     }
   }
 }
