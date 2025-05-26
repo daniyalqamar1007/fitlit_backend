@@ -31,6 +31,8 @@ export class User {
   
   @Prop({ default: false })
   isAdmin: boolean; // Added isAdmin flag to identify admin users
+
+  
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

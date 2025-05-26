@@ -97,4 +97,58 @@ export class UserService {
       profilePicture: user.profilePicture || null,
     };
   }
+
+  async softDeleteUser(
+    userId: string,
+  ): Promise<{ message: string; success: boolean }> {
+    try {
+      // First check if user exists and is not already deleted
+      const user = await this.userModel.findById(userId);
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      if (user.isDeleted) {
+        return {
+          success: false,
+          message: 'Account is already deleted',
+        };
+      }
+
+      // Perform soft delete
+      const currentDate = new Date();
+      const updatedUser = await this.userModel.findByIdAndUpdate(
+        userId,
+        {
+          $set: {
+            isDeleted: true,
+            deletedAt: currentDate,
+            // Optionally anonymize sensitive data
+            email: `deleted_${userId}_${currentDate.getTime()}@deleted.com`,
+            phone: null,
+            // You can add more fields to anonymize if needed
+          },
+        },
+        { new: true },
+      );
+
+      if (!updatedUser) {
+        throw new Error('Failed to delete account');
+      }
+
+      return {
+        success: true,
+        message: 'Account deleted successfully',
+      };
+    } catch (error) {
+      console.error('Error in soft delete:', error);
+
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      throw new Error('Failed to delete account. Please try again.');
+    }
+  }
 }

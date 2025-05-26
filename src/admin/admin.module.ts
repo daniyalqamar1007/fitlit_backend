@@ -9,6 +9,8 @@ import { User, UserSchema } from '../user/schemas/user.schema';
 import { UserModule } from '../user/user.module';
 import { Avatar, AvatarSchema } from 'src/avatar/schemas/avatar.schema';
 import { WardrobeItem, WardrobeItemSchema } from 'src/wardrobe/schemas/wardrobe.schema';
+import { AwsModule } from 'src/aws/aws.module';
+import { AvatarModule } from 'src/avatar/avatar.module';
 
 
 @Module({
@@ -27,6 +29,8 @@ import { WardrobeItem, WardrobeItemSchema } from 'src/wardrobe/schemas/wardrobe.
       }),
     }),
     UserModule,
+    AwsModule,
+    AvatarModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

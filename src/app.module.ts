@@ -10,6 +10,8 @@ import { WardrobeModule } from './wardrobe/wardrobe.module';
 import { AwsModule } from './aws/aws.module';
 import { AvatarModule } from './avatar/avatar.module';
 import { AdminModule } from './admin/admin.module';
+import { ContactModule } from './contact/contact.module';
+import { RatingModule } from './rating/rating.module';
 
 
 @Module({
@@ -23,8 +25,12 @@ import { AdminModule } from './admin/admin.module';
     AwsModule,
     AvatarModule,
     AdminModule,
+    ContactModule,
+    RatingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
+
 })
+
 export class AppModule {}

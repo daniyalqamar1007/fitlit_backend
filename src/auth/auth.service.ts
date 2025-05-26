@@ -68,6 +68,8 @@ export class AuthService {
     // console.log(dto)
     // return file
     try {
+      
+      
       const buffer: any = await this.AvatarService.getSignupAvatar(file.path);
       // console.log('openai buffer', buffer)
       // const buffer = await this.fetchImageBufferOrBase64(

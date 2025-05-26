@@ -1,12 +1,20 @@
 import { WardrobeModule } from './../wardrobe/wardrobe.module';
 // src/admin/admin.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User, UserDocument } from '../user/schemas/user.schema';
 import { AdminUserResponseDto, QueryParamsDto } from './dto/admin-user.dto';
 import { Avatar } from '../avatar/schemas/avatar.schema'; // adjust path as needed
 import { WardrobeItem } from 'src/wardrobe/schemas/wardrobe.schema';
+import { UpdateUserDto } from './dto/update-user.dto';
+import * as Multer from 'multer';
+import { AwsService } from 'src/aws/aws.service';
+import { AvatarService } from 'src/avatar/avatar.service';
 
 @Injectable()
 export class AdminService {
@@ -14,6 +22,8 @@ export class AdminService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Avatar.name) private avatarModel: Model<Avatar>,
     @InjectModel(WardrobeItem.name) private wardrobeModel: Model<WardrobeItem>,
+    private AwsService: AwsService,
+    private AvatarService: AvatarService,
   ) {}
 
   async getNewUsers(days: number = 7): Promise<User[]> {
@@ -187,7 +197,12 @@ export class AdminService {
       userId: user.userId,
       name: user.name,
       email: user.email,
+      // phoneNo: user.phoneNo,
+      profilePicture: user.profilePicture,
+      gender: user.gender,
       isAdmin: user.isAdmin,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 
@@ -224,4 +239,71 @@ export class AdminService {
       count,
     };
   }
+
+  async updateUser(
+    userId: number,
+    updateData: UpdateUserDto,
+    file: Multer.file,
+  ): Promise<AdminUserResponseDto> {
+    try {
+      const user = await this.userModel.findOne({ userId }).exec();
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+
+      const buffer: any = await this.AvatarService.getSignupAvatar(file.path);
+      const imageUrl = await this.AwsService.uploadFile(buffer, file);
+
+      // Check if email is being updated and if it already exists
+      if (updateData.email && updateData.email !== user.email) {
+        const existingUser = await this.userModel
+          .findOne({
+            email: updateData.email,
+            userId: { $ne: userId }, // Exclude current user
+          })
+          .exec();
+
+        if (existingUser) {
+          throw new BadRequestException(
+            `User with email ${updateData.email} already exists`,
+          );
+        }
+      }
+
+      // Update only the fields that are provided
+      Object.keys(updateData).forEach((key) => {
+        if (updateData[key] !== undefined && updateData[key] !== null) {
+          user[key] = updateData[key];
+        }
+      });
+
+      if (imageUrl) {
+        user.profilePicture = imageUrl;
+      }
+      // Update the updatedAt timestamp
+      user.updatedAt = new Date();
+
+      await user.save();
+
+      return this.mapToAdminUserResponse(user);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Also update your mapToAdminUserResponse method to include the new fields
+  // private mapToAdminUserResponse(user: UserDocument): AdminUserResponseDto {
+  //   return {
+  //     userId: user.userId,
+  //     name: user.name,
+  //     email: user.email,
+  //     phoneNo: user.phoneNo,
+  //     profilePicture: user.profilePicture,
+  //     gender: user.gender,
+  //     isAdmin: user.isAdmin,
+  //     createdAt: user.createdAt,
+  //     updatedAt: user.updatedAt,
+  //   };
+  // }
 }
