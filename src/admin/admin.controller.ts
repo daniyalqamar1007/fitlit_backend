@@ -8,11 +8,19 @@ import {
   Body,
   UseGuards,
   ParseIntPipe,
+  Put,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AdminAuthGuard } from './guards/admin-auth.guard';
 import { QueryParamsDto, AdminUserResponseDto } from './dto/admin-user.dto';
 import { UserDocument } from 'src/user/schemas/user.schema';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { multerOptions } from 'src/aws/aws.multer.config';
+import { FileInterceptor } from '@nestjs/platform-express';
+import * as Multer from 'multer';
+
 
 @Controller('admin')
 @UseGuards(AdminAuthGuard)
@@ -91,5 +99,14 @@ export class AdminController {
   @Get('count')
   async getAdminCount() {
     return this.adminService.getAdminCount();
+  }
+  @Put('users/:userId')
+  @UseInterceptors(FileInterceptor('file', multerOptions))
+  async updateUser(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Body() updateUserDto: any,
+    @UploadedFile() file?: Multer.File
+  ): Promise<AdminUserResponseDto> {
+    return this.adminService.updateUser(userId, updateUserDto, file);
   }
 }

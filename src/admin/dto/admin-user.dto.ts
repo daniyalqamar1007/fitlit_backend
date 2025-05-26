@@ -4,14 +4,18 @@ export class AdminUserResponseDto {
   userId: number;
   name: string;
   email: string;
+  phoneNo?: string;
+  profilePicture?: string;
+  gender?: string;
   isAdmin: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+  avatarCount?: number;
   avatars?: any[];
   shirts?: any[];
   pants?: any[];
   shoes?: any[];
   accessories?: any[];
-  //   createdAt: Date;
-  //   updatedAt: Date;
 }
 
 export class QueryParamsDto {
