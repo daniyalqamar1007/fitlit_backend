@@ -103,7 +103,7 @@ export class UserService {
   ): Promise<{ message: string; success: boolean }> {
     try {
       // First check if user exists and is not already deleted
-      const user = await this.userModel.findById(userId);
+      const user = await this.userModel.findOne({userId});
 
       if (!user) {
         throw new NotFoundException('User not found');
@@ -118,8 +118,8 @@ export class UserService {
 
       // Perform soft delete
       const currentDate = new Date();
-      const updatedUser = await this.userModel.findByIdAndUpdate(
-        userId,
+      const updatedUser = await this.userModel.findOneAndUpdate(
+        {userId},
         {
           $set: {
             isDeleted: true,

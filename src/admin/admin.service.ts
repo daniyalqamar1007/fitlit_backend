@@ -80,7 +80,7 @@ export class AdminService {
       .limit(limit)
       .exec();
 
-   console.log(users);
+    //  console.log(users);
 
     const total = await this.userModel.countDocuments(filter);
 
@@ -239,11 +239,10 @@ export class AdminService {
       count,
     };
   }
-
   async updateUser(
     userId: number,
     updateData: UpdateUserDto,
-    file: Multer.file,
+    file?:Multer.File, // Make file optional
   ): Promise<AdminUserResponseDto> {
     try {
       const user = await this.userModel.findOne({ userId }).exec();
@@ -252,45 +251,142 @@ export class AdminService {
         throw new NotFoundException(`User with ID ${userId} not found`);
       }
 
-      const buffer: any = await this.AvatarService.getSignupAvatar(file.path);
-      const imageUrl = await this.AwsService.uploadFile(buffer, file);
+      // Handle image update only if a new file is provided
+      if (file) {
+        try {
+          const buffer: any = await this.AvatarService.getSignupAvatar(file.path,);
+          const imageUrl = await this.AwsService.uploadFile(buffer, file);
 
-      // Check if email is being updated and if it already exists
-      if (updateData.email && updateData.email !== user.email) {
-        const existingUser = await this.userModel
-          .findOne({
-            email: updateData.email,
-            userId: { $ne: userId }, // Exclude current user
-          })
-          .exec();
-
-        if (existingUser) {
-          throw new BadRequestException(
-            `User with email ${updateData.email} already exists`,
-          );
+          if (imageUrl) {
+            user.profilePicture = imageUrl;
+          }
+        } catch (imageError) {
+          // Log the error but don't fail the entire update
+          console.error('Error updating profile picture:', imageError);
+          // Optionally throw if image update is critical
+          // throw new BadRequestException('Failed to update profile picture');
         }
       }
 
-      // Update only the fields that are provided
-      Object.keys(updateData).forEach((key) => {
-        if (updateData[key] !== undefined && updateData[key] !== null) {
-          user[key] = updateData[key];
+      // Handle other field updates
+      if (updateData) {
+        // Check if email is being updated and if it already exists
+        if (updateData.email && updateData.email !== user.email) {
+          const existingUser = await this.userModel
+            .findOne({
+              email: updateData.email,
+              userId: { $ne: userId }, // Exclude current user
+            })
+            .exec();
+
+          if (existingUser) {
+            throw new BadRequestException(
+              `User with email ${updateData.email} already exists`,
+            );
+          }
         }
-      });
 
-      if (imageUrl) {
-        user.profilePicture = imageUrl;
+        // Update only the fields that are provided and not empty
+        Object.keys(updateData).forEach((key) => {
+          const value = updateData[key];
+
+          // Skip undefined, null, and empty string values
+          if (value !== undefined && value !== null && value !== '') {
+            // Additional check for strings to avoid updating with just whitespace
+            if (typeof value === 'string' && value.trim() === '') {
+              return; // Skip empty or whitespace-only strings
+            }
+
+            user[key] = value;
+          }
+        });
       }
-      // Update the updatedAt timestamp
-      user.updatedAt = new Date();
 
-      await user.save();
+      // Only update timestamp if something actually changed
+      const hasChanges =
+        file ||
+        (updateData &&
+          Object.keys(updateData).some((key) => {
+            const value = updateData[key];
+            return (
+              value !== undefined &&
+              value !== null &&
+              value !== '' &&
+              (typeof value !== 'string' || value.trim() !== '')
+            );
+          }));
+
+      if (hasChanges) {
+        user.updatedAt = new Date();
+        await user.save();
+      }
 
       return this.mapToAdminUserResponse(user);
     } catch (error) {
-      throw error;
+      // Re-throw known errors
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+
+      // Handle unexpected errors
+      console.error('Unexpected error in updateUser:', error);
+      throw new BadRequestException('Failed to update user');
     }
   }
+  // async updateUser(
+  //   userId: number,
+  //   updateData: UpdateUserDto,
+  //   file: Multer.file,
+  // ): Promise<AdminUserResponseDto> {
+  //   try {
+  //     const user = await this.userModel.findOne({ userId }).exec();
+
+  //     if (!user) {
+  //       throw new NotFoundException(`User with ID ${userId} not found`);
+  //     }
+
+  //     const buffer: any = await this.AvatarService.getSignupAvatar(file.path);
+  //     const imageUrl = await this.AwsService.uploadFile(buffer, file);
+
+  //     // Check if email is being updated and if it already exists
+  //     if (updateData.email && updateData.email !== user.email) {
+  //       const existingUser = await this.userModel
+  //         .findOne({
+  //           email: updateData.email,
+  //           userId: { $ne: userId }, // Exclude current user
+  //         })
+  //         .exec();
+
+  //       if (existingUser) {
+  //         throw new BadRequestException(
+  //           `User with email ${updateData.email} already exists`,
+  //         );
+  //       }
+  //     }
+
+  //     // Update only the fields that are provided
+  //     Object.keys(updateData).forEach((key) => {
+  //       if (updateData[key] !== undefined && updateData[key] !== null) {
+  //         user[key] = updateData[key];
+  //       }
+  //     });
+
+  //     if (imageUrl) {
+  //       user.profilePicture = imageUrl;
+  //     }
+  //     // Update the updatedAt timestamp
+  //     user.updatedAt = new Date();
+
+  //     await user.save();
+
+  //     return this.mapToAdminUserResponse(user);
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
 
   // Also update your mapToAdminUserResponse method to include the new fields
   // private mapToAdminUserResponse(user: UserDocument): AdminUserResponseDto {
