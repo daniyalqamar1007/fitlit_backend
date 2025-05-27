@@ -54,59 +54,59 @@ export class WardrobeService {
     private readonly awsS3Service: AwsService,
   ) {}
 
-  async create(userId: string, createWardrobeItemDto: any, file: any) {
-    try {
-      const category = createWardrobeItemDto.category;
+async create(userId: string, createWardrobeItemDto: any, file: any) {
+  try {
+    const category = createWardrobeItemDto.category;
 
-      const [response1, response2] = await Promise.all([
-        await this.avatarService.getUpdated3DAvatar(
-          file.path,
-          createWardrobeItemDto.category,
-          `Convert this ${category} image (a ${category}) into a detailed 3D model of the ${category}  only,
-          preserving the fabric texture, shape, and design features. Focus solely on the ${category}
-          without any background or other objects.`,
-        ),
-        await this.avatarService.generateUpdatedAvatar(
-          createWardrobeItemDto.avatar,
-          file.path,
-          category,
-        ),
-      ]);
-
-      console.log(response2);
-      if (!response1 || typeof response1 === 'boolean') {
-        throw new BadRequestException('Failed to generate avatar buffer');
-      }
-      if (!response2 || typeof response2 === 'boolean') {
-        throw new BadRequestException('Failed to generate avatar buffer');
-      }
-      const imageUrl1 = await this.awsS3Service.uploadFile(response1, file);
-      const imageUrl2 = await this.awsS3Service.uploadFile(response2);
-      console.log(imageUrl1);
-      console.log(imageUrl2);
-
-      const newWardrobeItem = new this.wardrobeItemModel({
-        ...createWardrobeItemDto,
-        user_id: userId,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const [response1, response2] = await Promise.all([
+      this.avatarService.getUpdated3DAvatar(
+        file.path,
         category,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        sub_category: createWardrobeItemDto.sub_category,
-        image_url: imageUrl1,
-        avatar_url: imageUrl2,
-      });
+        `Convert this ${category} image (a ${category}) into a detailed 3D model of the ${category} only,
+        preserving the fabric texture, shape, and design features. Focus solely on the ${category}
+        without any background or other objects.`,
+      ),
+      this.avatarService.generateUpdatedAvatar(
+        createWardrobeItemDto.avatar,
+        file.path,
+        category,
+      ),
+    ]);
+    console.log(response1);
+    console.log(response2);
 
-      return newWardrobeItem.save();
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    } finally {
-      fs.unlink(file.path, (err: any) => {
-        if (err) {
-          console.log(err);
-        }
-      });
+    if (!response1 || typeof response1 === 'boolean' || !(response1 instanceof Buffer)) {
+      throw new BadRequestException('Failed to generate valid 3D avatar buffer');
     }
+
+    if (!response2 || typeof response2 === 'boolean' || !(response2 instanceof Buffer)) {
+      throw new BadRequestException('Failed to generate updated avatar buffer');
+    }
+
+    const imageUrl1 = await this.awsS3Service.uploadFile(response1, file);
+    const imageUrl2 = await this.awsS3Service.uploadFile(response2);
+
+    const newWardrobeItem = new this.wardrobeItemModel({
+      ...createWardrobeItemDto,
+      user_id: userId,
+      category: createWardrobeItemDto.category,
+      sub_category: createWardrobeItemDto.sub_category,
+      image_url: imageUrl1,
+      avatar_url: imageUrl2,
+    });
+
+    return newWardrobeItem.save();
+  } catch (error) {
+    throw new BadRequestException(error.message);
+  } finally {
+    fs.unlink(file.path, (err: any) => {
+      if (err) {
+        console.log('File deletion error:', err);
+      }
+    });
   }
+}
+
 
   clearSwipeState(userId: string) {
     delete this.userSwipeState[userId];
