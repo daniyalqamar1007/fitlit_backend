@@ -12,6 +12,7 @@ import { AvatarModule } from './avatar/avatar.module';
 import { AdminModule } from './admin/admin.module';
 import { ContactModule } from './contact/contact.module';
 import { RatingModule } from './rating/rating.module';
+import { AppSettingsModule } from './app-settings/app-settings.module';
 
 
 @Module({
@@ -27,6 +28,7 @@ import { RatingModule } from './rating/rating.module';
     AdminModule,
     ContactModule,
     RatingModule,
+    AppSettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
