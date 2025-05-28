@@ -58,7 +58,7 @@ async create(userId: string, createWardrobeItemDto: any, file: any) {
   try {
     const category = createWardrobeItemDto.category;
 
-    const [response1, response2] = await Promise.all([
+    const [response1] = await Promise.all([
       this.avatarService.getUpdated3DAvatar(
         file.path,
         category,
@@ -66,25 +66,23 @@ async create(userId: string, createWardrobeItemDto: any, file: any) {
         preserving the fabric texture, shape, and design features. Focus solely on the ${category}
         without any background or other objects.`,
       ),
-      this.avatarService.generateUpdatedAvatar(
-        createWardrobeItemDto.avatar,
-        file.path,
-        category,
-      ),
+      // this.avatarService.generateUpdatedAvatar(
+      //   createWardrobeItemDto.avatar,
+      //   file.path,
+      //   category,
+      // ),
     ]);
     console.log(response1);
-    console.log(response2);
+   
 
     if (!response1 || typeof response1 === 'boolean' || !(response1 instanceof Buffer)) {
       throw new BadRequestException('Failed to generate valid 3D avatar buffer');
     }
 
-    if (!response2 || typeof response2 === 'boolean' || !(response2 instanceof Buffer)) {
-      throw new BadRequestException('Failed to generate updated avatar buffer');
-    }
+   
 
     const imageUrl1 = await this.awsS3Service.uploadFile(response1, file);
-    const imageUrl2 = await this.awsS3Service.uploadFile(response2);
+    // const imageUrl2 = await this.awsS3Service.uploadFile(response2);
 
     const newWardrobeItem = new this.wardrobeItemModel({
       ...createWardrobeItemDto,
@@ -92,7 +90,7 @@ async create(userId: string, createWardrobeItemDto: any, file: any) {
       category: createWardrobeItemDto.category,
       sub_category: createWardrobeItemDto.sub_category,
       image_url: imageUrl1,
-      avatar_url: imageUrl2,
+      // avatar_url: imageUrl2,
     });
 
     return newWardrobeItem.save();
