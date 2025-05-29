@@ -180,7 +180,9 @@ export class AvatarService {
       // Create a File-like object
       const fileName = filePath.split('/').pop() ?? 'image.png';
       const imageFile = new FileLike(imageBuffer, fileName, 'image/png');
+      console.log("now coming")
       // Send the image to OpenAI for editing
+      console.log("going to gpt")
       const rsp = await this.openai.images.edit({
         model: 'gpt-image-1',
         image: imageFile,
@@ -210,7 +212,7 @@ Output the image in PNG format with a transparent background.`,
 
   generateAvatarPrompt(category?: string): string {
     const clothingMap: Record<string, string> = {
-      tshirt: 'a modern, fitted t-shirt with clean design and subtle detail',
+      tshirt: 'a modern, fitted shirt with clean design and subtle detail',
       pant: 'well-fitted casual pants in a neutral tone with realistic folds',
       shoe: 'stylish, casual shoes with a modern silhouette and soft shadows',
     };
@@ -225,6 +227,7 @@ Maintain a balanced, stylized appearance suitable for virtual environments.`;
 
   async getUpdated3DAvatar(source: string, category: string, prompt?: string) {
     try {
+      
       let imageBuffer: Buffer;
       let fileName = 'image.png';
 
@@ -247,7 +250,7 @@ Maintain a balanced, stylized appearance suitable for virtual environments.`;
 
       // Create a File-like object
       const imageFile = new FileLike(imageBuffer, fileName, 'image/png');
-
+console.log("going to gpt")
       // Send image for editing
       const rsp = await this.openai.images.edit({
         model: 'gpt-image-1',
@@ -257,6 +260,7 @@ Maintain a balanced, stylized appearance suitable for virtual environments.`;
         quality: 'low',
         prompt: prompt || this.generateAvatarPrompt(category),
       });
+      console.log(rsp)
 
       if (rsp.data && rsp.data[0].b64_json) {
         const image_base64: string = rsp.data[0].b64_json;
@@ -332,8 +336,9 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
     }
   }
 
-  async generateOutfit(source1: string, source2: string, source3: string) {
+  async generateOutfit(source1: string, source2: string, source3: string, source4: string) {
     try {
+      console.log("new user")
       // const [response1, response2, response3] = await Promise.all([
       const response1: any = await axios.get(source1, {
         responseType: 'arraybuffer',
@@ -346,6 +351,9 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
       const response3: any = await axios.get(source3, {
         responseType: 'arraybuffer',
       });
+       const response4: any = await axios.get(source4, {
+        responseType: 'arraybuffer',
+      });
       // ]);
 
       const imageBuffer1 = Buffer.from(response1.data, 'binary');
@@ -356,26 +364,34 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
 
       const imageBuffer3 = Buffer.from(response3.data, 'binary');
       const fileName3 = source3.split('/').pop() || 'image3.png';
-
+    const imageBuffer4 = Buffer.from(response4.data, 'binary');
+      const fileName4 = source4.split('/').pop() || 'image4.png';
       // Create FileLike objects for OpenAI API
+      console.log("just fetch teh")
       const imageFile1 = new FileLike(imageBuffer1, fileName1, 'image/png');
       const imageFile2 = new FileLike(imageBuffer2, fileName2, 'image/png');
       const imageFile3 = new FileLike(imageBuffer3, fileName3, 'image/png');
-
+     const imageFile4 = new FileLike(imageBuffer4, fileName4, 'image/png');
+      
       // Send images for editing
-      const response = await this.openai.images.edit({
+      console.log(imageFile4)
+        console.log("generatuing")
+       
+ const response = await this.openai.images.edit({
         model: 'gpt-image-1',
-        image: [imageFile1, imageFile2, imageFile3],
+        image: [imageFile1, imageFile2, imageFile3, imageFile4],
         size: '1024x1536', // optional: may be inferred or adjusted
         background: 'transparent',
         quality: 'low',
-        prompt: `Transform this person into a full-body 3D digital avatar.
+        prompt: `Transform the same person from image 4 into a full-body 3D digital avatar.
+        Use face from image 4, dress with clothing from images 1-3 (shirt, pants, shoes),
 Ensure clean lines, realistic proportions, soft shading, and expressive yet simple features.
 Maintain a balanced, stylized appearance suitable for virtual environments.
 Remove the background completely to make it transparent.
-Output the image in PNG format with a transparent background. 
-important Note: i atached tshirt design in mask put that tshirt on the avatar`,
+Output the image in PNG format with a transparent background.
+Important: Make sure to change the clothes of same person. Dont change face or any other physical appearance`,
       });
+      console.log(response)
 
       if (response.data?.[0]?.b64_json) {
         return Buffer.from(response.data[0].b64_json, 'base64');
@@ -388,27 +404,19 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
     }
   }
 
-  async outfit(
+  // Background processing function
+  private async processAvatarInBackground(
     dto: {
       shirt_id: string;
       pant_id: string;
       shoe_id: string;
+      profile_picture: string;
     },
     userId: string,
   ) {
     try {
       const { shirt_id, pant_id, shoe_id } = dto;
-      const avatar = await this.avatarModel.findOne({
-        user_id: userId,
-        shirt_id,
-        pant_id,
-        shoe_id,
-      });
-      if (avatar !== null) {
-        return {
-          avatar: avatar.avatarUrl,
-        };
-      }
+      
       const source1 = await this.wardropeModel
         .findOne({ _id: shirt_id })
         .select('image_url');
@@ -418,35 +426,87 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
       const source3 = await this.wardropeModel
         .findOne({ _id: shoe_id })
         .select('image_url');
+        
+      console.log("now starting background generation")
+      
       const generateOutfitBuffer = await this.generateOutfit(
         source1!.image_url,
         source2!.image_url,
         source3!.image_url,
+        dto.profile_picture
       );
+      
       console.log(generateOutfitBuffer);
-      if (typeof generateOutfitBuffer === 'boolean') {
+      
+      if (typeof generateOutfitBuffer !== 'boolean') {
+        const generateOutfitUrl = await this.awsS3Service.uploadFile(
+          generateOutfitBuffer,
+          userId,
+        );
+        
+        console.log(generateOutfitUrl);
+        
+        const created = new this.avatarModel({
+          user_id: userId,
+          avatarUrl: generateOutfitUrl,
+          shirt_id: shirt_id,
+          pant_id: pant_id,
+          shoe_id: shoe_id,
+        });
+        
+        await created.save();
+        console.log("Avatar generated and saved in background");
+      }
+    } catch (error) {
+      console.error('Background processing error:', error);
+    }
+  }
+
+  async outfit(
+    dto: {
+      shirt_id: string;
+      pant_id: string;
+      shoe_id: string;
+      profile_picture: string;
+    },
+    userId: string,
+  ) {
+    try {
+      const { shirt_id, pant_id, shoe_id } = dto;
+      
+      // Check if avatar already exists
+      const avatar = await this.avatarModel.findOne({
+        user_id: userId,
+        shirt_id,
+        pant_id,
+        shoe_id,
+      });
+      
+      console.log(shirt_id)
+      console.log(pant_id)
+      console.log(shoe_id)
+      console.log(userId)
+      
+      if (avatar !== null) {
+        console.log(avatar)
         return {
-          // success: false,
-          avatar: null,
+          success: true,
+          avatar: avatar.avatarUrl,
         };
       }
-      const generateOutfitUrl = await this.awsS3Service.uploadFile(
-        generateOutfitBuffer,
-        userId,
-      );
-      console.log(generateOutfitUrl);
-      const created = new this.avatarModel({
-        user_id: userId,
-        avatarUrl: generateOutfitUrl,
-        shirt_id: source1,
-        pant_id: source2,
-        shoe_id: source3,
-      });
-      await created.save();
+      
+      // If avatar doesn't exist, return success immediately
+      // and start background processing
+      console.log("Starting background avatar generation")
+      
+      // Process in background (don't await)
+      this.processAvatarInBackground(dto, userId);
+      
       return {
         // success: true,
-        avatar: generateOutfitUrl,
+        avatar: null, // Avatar will be generated in background
       };
+      
     } catch (error) {
       console.log(error);
       return {

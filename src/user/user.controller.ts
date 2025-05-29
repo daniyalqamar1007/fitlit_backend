@@ -49,6 +49,7 @@ export class UserController {
 
     try {
       if (file && updateData.onProfileChange === 'yes') {
+        console.log("coming")
         try {
           console.log(file);
           const buffer: any = await this.AvatarService.getSignupAvatar(

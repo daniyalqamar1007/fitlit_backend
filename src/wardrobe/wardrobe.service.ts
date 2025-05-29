@@ -57,7 +57,9 @@ export class WardrobeService {
 async create(userId: string, createWardrobeItemDto: any, file: any) {
   try {
     const category = createWardrobeItemDto.category;
-
+    console.log(category)
+    console.log(file.path)
+    
     const [response1] = await Promise.all([
       this.avatarService.getUpdated3DAvatar(
         file.path,
