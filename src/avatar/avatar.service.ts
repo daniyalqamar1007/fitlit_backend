@@ -77,9 +77,10 @@ export class AvatarService {
 
   
 
-  async checkAvailability(date: string) {
+  async checkAvailability(id:string , date: string) {
     console.log(date)
-    const avatar = await this.avatarModel.findOne({ date });
+    console.log(id)
+    const avatar = await this.avatarModel.findOne({ user_id:id, date });
     console.log(avatar)
     if (avatar) {
       return {
@@ -555,49 +556,25 @@ Important: Make sure to change the clothes of same person. Dont change face or a
   //     throw new BadRequestException(e.message);
   //   }
   // }
-  async swipe(dto: any, userId: string) {
-    try {
-      let state = this.userSwipeStates.get(userId);
-      if (!state) {
-        state = { swipeIndex: 0, previous: [], next: [] };
-        this.userSwipeStates.set(userId, state);
-      }
+  async getAllUserAvatars(userId: string) {
+  try {
+    const avatars = await this.avatarModel
+      .find({ user_id: userId })
+      .select('avatarUrl')
+      .sort({ createdAt: -1 }); // Sort by newest first
 
-      if (dto.swipeAngle === 'left') {
-        if (state.swipeIndex === 0) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          return { success: true, avatar: dto.avatarUrl };
-        }
-
-        state.swipeIndex--;
-        const avatar = state.previous[state.swipeIndex];
-        state.previous.shift();
-
-        return { success: true, avatar: avatar.avatar };
-      }
-
-      if (dto.swipeAngle === 'right') {
-        const wardrobeItems = await this.avatarModel
-          .find({ user_id: userId })
-          .sort({ createdAt: -1 })
-          .skip(state.swipeIndex)
-          .limit(1);
-
-        if (wardrobeItems.length === 0) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          return { success: true, avatar: dto.avatarUrl };
-        }
-
-        const item = wardrobeItems[0];
-        state.swipeIndex++;
-        state.previous.push({ avatar: item.avatarUrl });
-
-        return { success: true, avatar: item.avatarUrl };
-      }
-    } catch (e) {
-      throw new BadRequestException(e.message);
-    }
+    const avatarUrls = avatars.map(avatar => avatar.avatarUrl);
+console.log(avatarUrls.length)
+    return {
+      success: true,
+      avatars: avatarUrls,
+      count: avatarUrls.length
+    };
+  } catch (error) {
+    throw new Error(`Failed to fetch user avatars: ${error.message}`);
   }
+}
+
 }
 
 // FileLike class moved outside of AvatarService

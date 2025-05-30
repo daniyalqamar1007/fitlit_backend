@@ -30,8 +30,8 @@ export class AvatarController {
   }
 
   @Get('check')
-  async checkAvailability(@Query('date') date: string) {
-    return this.avatarService.checkAvailability(date);
+  async checkAvailability(@Query('date') date: string,@Query('id') id: string) {
+    return this.avatarService.checkAvailability(id,date);
   }
 
   @Post('test')
@@ -52,12 +52,25 @@ export class AvatarController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post('swipe-outfit')
-  async swipe(@Body() dto: any, @Req() req: RequestWithUser) {
-    return await this.avatarService.swipe(dto, req.user.userId);
+  // @UseGuards(JwtAuthGuard)
+  // @Post('swipe-outfit')
+  // async swipe(@Body() dto: any, @Req() req: RequestWithUser) {
+  //   return await this.avatarService.swipe(dto, req.user.userId);
+  // }
+@UseGuards(JwtAuthGuard)
+@Get('user-avatars')
+async getUserAvatars(@Req() req: RequestWithUser) {
+  try {
+    const userId = req.user.userId;
+    return await this.avatarService.getAllUserAvatars(userId);
+  } catch (error) {
+    console.error(error);
+    throw new HttpException(
+      'Failed to fetch user avatars',
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
-
+}
   @UseGuards(JwtAuthGuard)
   @Post('outfit')
   async outfit(

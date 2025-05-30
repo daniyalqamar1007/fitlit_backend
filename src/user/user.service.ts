@@ -66,7 +66,9 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    
     return {
+      userId:user.userId,
       email: user.email,
       name: user.name,
       gender: user.gender,
