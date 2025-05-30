@@ -198,6 +198,7 @@ Maintain a balanced, stylized appearance suitable for virtual environments.
 Remove the background completely to make it transparent.
 Output the image in PNG format with a transparent background.`,
       });
+      console.log(rsp)
       if (rsp.data) {
         const image_base64: any = rsp.data[0].b64_json;
         return Buffer.from(image_base64, 'base64');

@@ -15,7 +15,7 @@ export class CreateUserDto {
 
   @IsEmail({}, { message: 'Please provide a valid email address' })
   @Matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, {
-    message: 'Email must be in a valid format (e.g., user@example.com)',
+    message: 'Email must be in a valid format',
   })
   @Transform(({ value }) => value.trim())
   email: string;
