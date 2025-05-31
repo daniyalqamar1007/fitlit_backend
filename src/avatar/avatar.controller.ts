@@ -75,11 +75,12 @@ async getUserAvatars(@Req() req: RequestWithUser) {
   @Post('outfit')
   async outfit(
     @Body()
-    dto: { shirt_id: string; pant_id: string; shoe_id: string,profile_picture:string },
+    dto: { shirt_id: string; accessories_id:string;pant_id: string; shoe_id: string;profile_picture:string },
     @Req() req: RequestWithUser,
   ) {
     try {
       console.log("coming")
+      // console.log(accessories_id)y
       return this.avatarService.outfit(dto, req.user?.userId);
     } catch (error) {
       console.error(error);

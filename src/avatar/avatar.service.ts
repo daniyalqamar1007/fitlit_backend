@@ -215,6 +215,7 @@ Output the image in PNG format with a transparent background.`,
   generateAvatarPrompt(category?: string): string {
     const clothingMap: Record<string, string> = {
       tshirt: 'a modern, fitted shirt with clean design and subtle detail',
+      accessories:'minimalist yet stylish accessories with clean lines and subtle metallic highlights',
       pant: 'well-fitted casual pants in a neutral tone with realistic folds',
       shoe: 'stylish, casual shoes with a modern silhouette and soft shadows',
     };
@@ -338,7 +339,7 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
     }
   }
 
-  async generateOutfit(source1: string, source2: string, source3: string, source4: string) {
+  async generateOutfit(source1: string,source5:string, source2: string, source3: string, source4: string) {
     try {
       console.log("new user")
       // const [response1, response2, response3] = await Promise.all([
@@ -356,6 +357,9 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
        const response4: any = await axios.get(source4, {
         responseType: 'arraybuffer',
       });
+         const response5: any = await axios.get(source5, {
+        responseType: 'arraybuffer',
+      });
       // ]);
 
       const imageBuffer1 = Buffer.from(response1.data, 'binary');
@@ -368,12 +372,15 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
       const fileName3 = source3.split('/').pop() || 'image3.png';
     const imageBuffer4 = Buffer.from(response4.data, 'binary');
       const fileName4 = source4.split('/').pop() || 'image4.png';
+          const imageBuffer5 = Buffer.from(response5.data, 'binary');
+      const fileName5 = source5.split('/').pop() || 'image4.png';
       // Create FileLike objects for OpenAI API
       console.log("just fetch teh")
       const imageFile1 = new FileLike(imageBuffer1, fileName1, 'image/png');
       const imageFile2 = new FileLike(imageBuffer2, fileName2, 'image/png');
       const imageFile3 = new FileLike(imageBuffer3, fileName3, 'image/png');
      const imageFile4 = new FileLike(imageBuffer4, fileName4, 'image/png');
+      const imageFile5 = new FileLike(imageBuffer5, fileName5, 'image/png');
       
       // Send images for editing
       console.log(imageFile4)
@@ -381,12 +388,13 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
        
  const response = await this.openai.images.edit({
         model: 'gpt-image-1',
-        image: [imageFile1, imageFile2, imageFile3, imageFile4],
+        image: [imageFile1,imageFile5, imageFile2, imageFile3, imageFile4],
         size: '1024x1536', // optional: may be inferred or adjusted
         background: 'transparent',
         quality: 'low',
         prompt: `Transform the same person from image 4 into a full-body 3D digital avatar.
-        Use face from image 4, dress with clothing from images 1-3 (shirt, pants, shoes),
+        Use face from image 5, dress with clothing from images 1-4 (shirt,accessories, pants, shoes),
+        Ensure to fit the accessroies in that its place if it hat or air pods and bracclet and detect itself and put in its excat polace y 
 Ensure clean lines, realistic proportions, soft shading, and expressive yet simple features.
 Maintain a balanced, stylized appearance suitable for virtual environments.
 Remove the background completely to make it transparent.
@@ -410,17 +418,22 @@ Important: Make sure to change the clothes of same person. Dont change face or a
   private async processAvatarInBackground(
     dto: {
       shirt_id: string;
+      accessories_id:string;
       pant_id: string;
       shoe_id: string;
+      
       profile_picture: string;
     },
     userId: string,
   ) {
     try {
-      const { shirt_id, pant_id, shoe_id } = dto;
+      const { shirt_id,accessories_id, pant_id, shoe_id } = dto;
       
       const source1 = await this.wardropeModel
         .findOne({ _id: shirt_id })
+        .select('image_url');
+         const source5 = await this.wardropeModel
+        .findOne({ _id: accessories_id })
         .select('image_url');
       const source2 = await this.wardropeModel
         .findOne({ _id: pant_id })
@@ -433,8 +446,10 @@ Important: Make sure to change the clothes of same person. Dont change face or a
       
       const generateOutfitBuffer = await this.generateOutfit(
         source1!.image_url,
+         source5!.image_url,
         source2!.image_url,
         source3!.image_url,
+         
         dto.profile_picture
       );
       
@@ -452,6 +467,7 @@ Important: Make sure to change the clothes of same person. Dont change face or a
           user_id: userId,
           avatarUrl: generateOutfitUrl,
           shirt_id: shirt_id,
+          accessories_id:accessories_id,
           pant_id: pant_id,
           shoe_id: shoe_id,
         });
@@ -467,24 +483,28 @@ Important: Make sure to change the clothes of same person. Dont change face or a
   async outfit(
     dto: {
       shirt_id: string;
+      accessories_id:string;
       pant_id: string;
       shoe_id: string;
+    
       profile_picture: string;
     },
     userId: string,
   ) {
     try {
-      const { shirt_id, pant_id, shoe_id } = dto;
+      const { shirt_id,accessories_id, pant_id, shoe_id } = dto;
       
       // Check if avatar already exists
       const avatar = await this.avatarModel.findOne({
         user_id: userId,
         shirt_id,
+        accessories_id,
         pant_id,
         shoe_id,
       });
       
       console.log(shirt_id)
+      console.log(accessories_id)
       console.log(pant_id)
       console.log(shoe_id)
       console.log(userId)

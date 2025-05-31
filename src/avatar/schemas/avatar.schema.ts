@@ -34,8 +34,13 @@ export class Avatar {
   })
   shoe_id: WardrobeItem;
 
-  // @Prop({ required: false })
-  // accessory_id: string;
+
+
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'WardrobeItem',
+  })
+  accessories_id: string;
 
   @Prop({ required: true })
   avatarUrl: string;
