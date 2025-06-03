@@ -25,6 +25,11 @@ export class AvatarController {
   @UseGuards(JwtAuthGuard)
   @Post('save-avatar')
   async saveavatar(@Body() Dto: CreateAvatarDto, @Req() req: RequestWithUser) {
+    console.log("Raw request body:", req.body); // ✅ Log the raw body
+  console.log("DTO received:", Dto); // ✅ Log the DTO
+  console.log("Type of accessories_id:", typeof Dto.accessories_id); // ✅ Check type
+  
+    console.log("coming")
     const userId = req.user.userId;
     return this.avatarService.saveavatar(Dto, userId);
   }
@@ -33,6 +38,21 @@ export class AvatarController {
   async checkAvailability(@Query('date') date: string,@Query('id') id: string) {
     return this.avatarService.checkAvailability(id,date);
   }
+@UseGuards(JwtAuthGuard)
+@Get('all-by-date')
+async getAllByDate(@Req() req: RequestWithUser) {
+  try {
+    const userId = req.user.userId;
+    return await this.avatarService.getAvatarsByDate(userId);
+  } catch (error) {
+    console.error(error);
+    throw new HttpException(
+      'Failed to fetch avatars by date',
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
+}
+
 
   @Post('test')
   @UseInterceptors(FileInterceptor('file', multerOptions))

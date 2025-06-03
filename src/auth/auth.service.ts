@@ -102,12 +102,13 @@ export class AuthService {
       const token = this.generateToken(user);
 
       return {
+        success:true,
         message: 'Signup successful',
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         userId: user.userId,
         access_token: token,
       };
     } catch (error) {
+    
       if (error instanceof BadRequestException) throw error;
       throw new InternalServerErrorException('Signup failed', error.message);
     }

@@ -12,8 +12,12 @@ export class CreateAvatarDto {
   @IsString()
   shoe_id: string;
 
-    @IsString()
+  @IsString()
+  
   accessories_id: string;
+  @IsString()
+  
+  stored_message: string;
 
   @IsString()
   avatarUrl: string;
