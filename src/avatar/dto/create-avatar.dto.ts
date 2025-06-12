@@ -21,6 +21,8 @@ export class CreateAvatarDto {
 
   @IsString()
   avatarUrl: string;
+  @IsString()
+  backgroundimageurl: string;
 
   @Matches(/^\d{2}\/\d{2}\/\d{4}$/, {
     message: 'date must be in dd/mm/yyyy format',

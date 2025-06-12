@@ -39,6 +39,8 @@ export class Avatar {
 
   @Prop({ required: true })
   avatarUrl: string;
+    @Prop({ required: false })
+  backgroundimageurl: string;
 
   @Prop({ required: false })
   date: string; // Format: dd/mm/yyyy

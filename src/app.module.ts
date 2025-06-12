@@ -13,7 +13,7 @@ import { AdminModule } from './admin/admin.module';
 import { ContactModule } from './contact/contact.module';
 import { RatingModule } from './rating/rating.module';
 import { AppSettingsModule } from './app-settings/app-settings.module';
-
+import { BackgroundImagesModule } from './background-images/background-images.module';
 
 @Module({
   imports: [
@@ -29,10 +29,9 @@ import { AppSettingsModule } from './app-settings/app-settings.module';
     ContactModule,
     RatingModule,
     AppSettingsModule,
+    BackgroundImagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
-
 })
-
 export class AppModule {}

@@ -68,6 +68,7 @@ export class AvatarService {
   shirt_id: new Types.ObjectId(dto.shirt_id),
   pant_id: new Types.ObjectId(dto.pant_id),
   shoe_id: new Types.ObjectId(dto.shoe_id),
+  backgroundimageurl:dto.backgroundimageurl,
   accessories_id: new Types.ObjectId(dto.accessories_id),
   stored_message: dto.stored_message, // ✅ Fixed
   avatarUrl: dto.avatarUrl,
@@ -111,9 +112,12 @@ export class AvatarService {
 async getAvatarsByDate(userId: string) {
   try {
     const avatars = await this.avatarModel
-      .find({ user_id: userId })
-      .select('avatarUrl date stored_message')
-      .sort({ date: -1 }) // newest first
+      .find({
+        user_id: userId,
+        date: { $exists: true, $ne: null }, // ✅ Only avatars with date
+      })
+      .select('avatarUrl date stored_message') // stored_message might be null or missing — that's OK
+      .sort({ date: -1 })
       .lean();
 
     return {
@@ -121,7 +125,7 @@ async getAvatarsByDate(userId: string) {
       data: avatars.map((avatar) => ({
         date: avatar.date,
         avatarUrl: avatar.avatarUrl,
-        stored_message: avatar.stored_message,
+        stored_message: avatar.stored_message ?? '', // 👈 fallback to empty string if it's null
       })),
     };
   } catch (error) {
@@ -425,24 +429,14 @@ important Note: i atached tshirt design in mask put that tshirt on the avatar`,
         size: '1024x1536', // optional: may be inferred or adjusted
         background: 'transparent',
         quality: 'low',
-prompt: `Edit this person's outfit while preserving their exact face, body proportions, pose, and physical appearance. 
-        use the face and posture and shape and color and height and look as teh imagefile4  and just change its clothe 
-        PRESERVE EXACTLY:
-        - Facial features, expression, and skin tone
-        - Body proportions and pose
-        - Hair style and color
-        - Overall body position and stance
-        
-        CHANGE ONLY:
-        - Replace current shirt with a stylish, well-fitted shirt
-        - Replace current pants with modern, comfortable pants  
-        - Replace current shoes with fashionable shoes
-        - Add stylish accessories (hat, jewelry, etc.) in appropriate positions
-        
-        Edit a realistic, well-fitted outfit that looks natural on this specific person.
-        Maintain consistent lighting and perspective.
-        Ensure transparent background.
-        Make it look like a professional avatar suitable for digital platforms but must be match with imagefile 4 that i porvdie ou`
+        prompt: `Transform the same person from image 4 into a full-body 3D digital avatar.
+        Use face from image 5, dress with clothing from images 1-4 (shirt,accessories, pants, shoes),
+        Ensure to fit the accessroies in that its place if it hat or air pods and bracclet and detect itself and put in its excat polace y 
+Ensure clean lines, realistic proportions, soft shading, and expressive yet simple features.
+Maintain a balanced, stylized appearance suitable for virtual environments.
+Remove the background completely to make it transparent.
+Output the image in PNG format with a transparent background.
+Important: Make sure to change the clothes of same person. Dont change face or any other physical appearance`,
       });
       console.log(response)
 
@@ -457,7 +451,7 @@ prompt: `Edit this person's outfit while preserving their exact face, body propo
     }
   }
 
-
+  // Background processing function
   private async processAvatarInBackground(
     dto: {
       shirt_id: string;

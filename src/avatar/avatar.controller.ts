@@ -28,7 +28,7 @@ export class AvatarController {
     console.log("Raw request body:", req.body); // ✅ Log the raw body
   console.log("DTO received:", Dto); // ✅ Log the DTO
   console.log("Type of accessories_id:", typeof Dto.accessories_id); // ✅ Check type
-  
+  console.log(Dto.backgroundimageurl)
     console.log("coming")
     const userId = req.user.userId;
     return this.avatarService.saveavatar(Dto, userId);
