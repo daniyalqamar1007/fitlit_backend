@@ -95,11 +95,12 @@ export class AvatarService {
     console.log(id)
     const avatar = await this.avatarModel.findOne({ user_id:id, date });
     console.log(avatar)
+
     if (avatar) {
       return {
         success: true,
         avatarUrl: avatar.avatarUrl,
-      
+        backgroundimageurl: avatar.backgroundimageurl,
       };
     } else {
       return {
@@ -109,30 +110,32 @@ export class AvatarService {
       };
     }
   }
-async getAvatarsByDate(userId: string) {
-  try {
-    const avatars = await this.avatarModel
-      .find({
-        user_id: userId,
-        date: { $exists: true, $ne: null }, // ✅ Only avatars with date
-      })
-      .select('avatarUrl date stored_message') // stored_message might be null or missing — that's OK
-      .sort({ date: -1 })
-      .lean();
 
-    return {
-      success: true,
-      data: avatars.map((avatar) => ({
-        date: avatar.date,
-        avatarUrl: avatar.avatarUrl,
-        stored_message: avatar.stored_message ?? '', // 👈 fallback to empty string if it's null
-      })),
-    };
-  } catch (error) {
-    throw new Error(`Error fetching avatars by date: ${error.message}`);
+  async getAvatarsByDate(userId: string) {
+    try {
+      const avatars = await this.avatarModel
+        .find({
+          user_id: userId,
+          date: { $exists: true, $ne: null }, // ✅ Only avatars with date
+        })
+        .select('avatarUrl date stored_message backgroundimageurl') // stored_message might be null or missing — that's OK
+        .sort({ date: -1 })
+        .lean();
+
+      return {
+        success: true,
+        data: avatars.map((avatar) => ({
+          date: avatar.date,
+          avatarUrl: avatar.avatarUrl,
+          stored_message: avatar.stored_message ?? '',
+          backgroundimageurl: avatar.backgroundimageurl,
+           // 👈 fallback to empty string if it's null
+        })),
+      };
+    } catch (error) {
+      throw new Error(`Error fetching avatars by date: ${error.message}`);
+    }
   }
-}
-
 
   async removeBackground(
     input: string | Buffer,
@@ -173,7 +176,7 @@ async getAvatarsByDate(userId: string) {
     return Buffer.from(arrayBuffer);
   }
 
-  async convertToPng(filePath: string) {
+  async convertToPng(filePath: string): Promise<string | null> {
     const dir = path.dirname(filePath);
     const ext = path.extname(filePath).toLowerCase();
     const isPng = ext === '.png';
@@ -185,7 +188,6 @@ async getAvatarsByDate(userId: string) {
 
     console.log('File is not a PNG.');
 
-    // Remove all known image extensions (repeated or nested)
     const baseName = path
       .basename(filePath)
       .replace(/\.(png|jpe?g|webp|bmp|gif|tiff?)+$/i, '');
@@ -194,14 +196,13 @@ async getAvatarsByDate(userId: string) {
 
     try {
       await sharp(filePath).png().toFile(outputPath);
-
       console.log(`Converted to PNG: ${outputPath}`);
-
       fs.unlinkSync(filePath);
       console.log(`Deleted original file: ${filePath}`);
       return outputPath;
     } catch (err) {
       console.error('Conversion failed:', err);
+      return null;
     }
   }
 
@@ -523,7 +524,6 @@ Important: Make sure to change the clothes of same person. Dont change face or a
       accessories_id:string;
       pant_id: string;
       shoe_id: string;
-    
       profile_picture: string;
     },
     userId: string,
@@ -540,14 +540,7 @@ Important: Make sure to change the clothes of same person. Dont change face or a
         shoe_id,
       });
       
-      console.log(shirt_id)
-      console.log(accessories_id)
-      console.log(pant_id)
-      console.log(shoe_id)
-      console.log(userId)
-      
       if (avatar !== null) {
-        console.log(avatar)
         return {
           success: true,
           avatar: avatar.avatarUrl,
@@ -562,15 +555,17 @@ Important: Make sure to change the clothes of same person. Dont change face or a
       this.processAvatarInBackground(dto, userId);
       
       return {
-        // success: true,
-        avatar: null, // Avatar will be generated in background
+        success: true,
+        message: 'Avatar generation started',
+        status: 'processing'
       };
       
     } catch (error) {
       console.log(error);
       return {
-        // success: false,
-        avatar: null,
+        success: false,
+        message: 'Failed to process avatar request',
+        status: 'error'
       };
     }
   }
