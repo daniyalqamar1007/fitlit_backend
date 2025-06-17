@@ -47,7 +47,6 @@ export class BackgroundImagesService {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
       maxRetries: 3,
-      timeout: 60000, // 60 seconds
     });
 
     // Create temp directory if it doesn't exist
@@ -90,7 +89,7 @@ export class BackgroundImagesService {
       await sharp(buffer)
         .resize(width, height)
         .jpeg({ 
-          quality: 60, // Reduced quality
+          quality: 80, // Reduced quality
           mozjpeg: true, // Use mozjpeg for better compression
           chromaSubsampling: '4:2:0' // More aggressive chroma subsampling
         })
@@ -136,12 +135,15 @@ export class BackgroundImagesService {
 
         // Upload to S3
         const imageUrl = await this.awsS3Service.uploadFile(imageBuffer, userId);
-
+        await this.backgroundImageModel.updateMany(
+          { user_id: userId },
+          { $set: { status: false } }
+        );
         // Save to database
         const created = new this.backgroundImageModel({
           user_id: userId,
           image_url: imageUrl,
-          status: false,
+          status: true,
         });
 
 
@@ -227,6 +229,13 @@ export class BackgroundImagesService {
           const imageUrl = await this.awsS3Service.uploadFile(imageBuffer, userId);
 
           // Save to database
+          // First update all existing background images for this user to false
+          await this.backgroundImageModel.updateMany(
+            { user_id: userId },
+            { $set: { status: false } }
+          );
+
+          // Then create the new background image with status true
           const created = new this.backgroundImageModel({
             user_id: userId,
             image_url: imageUrl,
