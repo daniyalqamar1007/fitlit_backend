@@ -31,6 +31,30 @@ interface UploadedFile {
 export class BackgroundImagesController {
   constructor(private readonly backgroundImagesService: BackgroundImagesService) {}
 
+  @Post('generate')
+  @UseInterceptors(FileInterceptor('image'))
+  async generateBackground(
+    @Request() req,
+    @Body() dto: CreateBackgroundImageDto,
+    @UploadedFile() file?: UploadedFile,
+  ) {
+    console.log("User ID:", req.user.userId);
+    console.log("Prompt:", dto.prompt);
+    console.log("File:", file);
+
+    // Check if at least one of prompt or file is provided
+    if (!dto.prompt && !file) {
+      throw new BadRequestException('Either prompt or image file is required');
+    }
+
+    // If both are provided, prioritize file over prompt
+    if (file) {
+      return this.backgroundImagesService.createFromImage(req.user.userId, file);
+    } else {
+      return this.backgroundImagesService.createFromPrompt(req.user.userId, dto);
+    }
+  }
+
   @Post('generate-from-prompt')
   async createFromPrompt(
     @Request() req,

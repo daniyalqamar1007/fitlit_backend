@@ -77,4 +77,21 @@ export class UserController {
       }
     }
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('all')
+  async getAllUsers() {
+    const users = await this.userService.findAll();
+    const filteredUsers = users
+      .filter(user => user.profilePicture && user.profilePicture.trim() !== '')
+      .map(user => ({
+        id: user.userId,
+        name: user.name,
+        profilePicture: user.profilePicture
+      }));
+    return {
+      success: true,
+      data: filteredUsers
+    };
+  }
 }
