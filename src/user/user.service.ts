@@ -5,13 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types, Model as MongooseModel } from 'mongoose';
 import { CreateUserDto } from '../auth/dto/signup.dto/signup.dto';
 import { CounterService } from '../common/services/counter.service';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from './schemas/user.schema';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { OtpVerifyDto } from 'src/auth/dto/signup.dto/otp-verify.dto';
+import { Follow, FollowDocument } from './schemas/follow.schema';
 
 @Injectable()
 export class UserService {
@@ -22,6 +23,7 @@ export class UserService {
   constructor(
     @InjectModel('User') private userModel: Model<any>,
     private counterService: CounterService,
+    @InjectModel(Follow.name) private followModel: MongooseModel<FollowDocument>,
   ) {}
 
   async createUser(dto: OtpVerifyDto) {
@@ -153,5 +155,56 @@ export class UserService {
 
       throw new Error('Failed to delete account. Please try again.');
     }
+  }
+
+  async followOrUnfollow(currentUserId: number, targetUserId: number, action: 'follow' | 'unfollow') {
+    if (currentUserId === targetUserId) {
+      throw new BadRequestException('You cannot follow/unfollow yourself');
+    }
+    const follower = await this.userModel.findOne({ userId: currentUserId });
+    const following = await this.userModel.findOne({ userId: targetUserId });
+    if (!follower || !following) {
+      throw new NotFoundException('User not found');
+    }
+    const followerObjId = follower._id;
+    const followingObjId = following._id;
+    if (action === 'follow') {
+      const exists = await this.followModel.findOne({ follower: followerObjId, following: followingObjId });
+      if (exists) {
+        return { success: false, message: 'Already following' };
+      }
+      await this.followModel.create({ follower: followerObjId, following: followingObjId });
+      return { success: true, message: 'Followed successfully' };
+    } else {
+      const res = await this.followModel.deleteOne({ follower: followerObjId, following: followingObjId });
+      if (res.deletedCount > 0) {
+        return { success: true, message: 'Unfollowed successfully' };
+      } else {
+        return { success: false, message: 'Not following' };
+      }
+    }
+  }
+
+  async getFollowCounts(userId: number) {
+    const user = await this.userModel.findOne({ userId });
+    if (!user) throw new NotFoundException('User not found');
+    const userObjId = user._id;
+    const followingCount = await this.followModel.countDocuments({ follower: userObjId });
+    const followersCount = await this.followModel.countDocuments({ following: userObjId });
+    return {
+      following: followingCount,
+      followers: followersCount,
+    };
+  }
+
+  async isFollowing(currentUserId: number, targetUserId: number): Promise<boolean> {
+    const currentUser = await this.userModel.findOne({ userId: currentUserId });
+    const targetUser = await this.userModel.findOne({ userId: targetUserId });
+    if (!currentUser || !targetUser) return false;
+    const exists = await this.followModel.findOne({
+      follower: currentUser._id,
+      following: targetUser._id,
+    });
+    return !!exists;
   }
 }

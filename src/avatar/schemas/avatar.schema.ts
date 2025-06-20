@@ -6,47 +6,35 @@ export type AvatarDocument = Avatar & Document;
 
 @Schema({ collection: 'avatars' })
 export class Avatar {
-  @Prop({
-    type: Number,
-    ref: 'User',
-    required: true,
-  })
+  @Prop({ type: Number, ref: 'User', required: true })
   user_id: number;
 
-  @Prop({
-    type: MongooseSchema.Types.ObjectId,
-    ref: 'WardrobeItem',
-  })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'WardrobeItem' })
   shirt_id: WardrobeItem;
 
-  @Prop({
-    type: MongooseSchema.Types.ObjectId,
-    ref: 'WardrobeItem',
-  })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'WardrobeItem' })
   pant_id: WardrobeItem;
 
-  @Prop({
-    type: MongooseSchema.Types.ObjectId,
-    ref: 'WardrobeItem',
-  })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'WardrobeItem' })
   shoe_id: WardrobeItem;
 
-  @Prop({
-    type: MongooseSchema.Types.ObjectId,
-    ref: 'WardrobeItem',
-  })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'WardrobeItem' })
   accessories_id: WardrobeItem;
 
   @Prop({ required: true })
   avatarUrl: string;
-    @Prop({ required: false })
+
+  @Prop({ required: false })
   backgroundimageurl: string;
 
   @Prop({ required: false })
-  date: string; // Format: dd/mm/yyyy
+  date: string;
 
   @Prop({ required: false })
-  stored_message: string; // ✅ Added this line
+  stored_message: string;
+
+  @Prop({ required: false })
+  stackimage: string;
 }
 
 export const AvatarSchema = SchemaFactory.createForClass(Avatar);

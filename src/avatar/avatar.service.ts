@@ -53,40 +53,45 @@ export class AvatarService {
       );
     }
   }
-  async saveavatar(dto: CreateAvatarDto, userId: string) {
-  try {
-    console.log("haseeb")
-    console.log(dto.shirt_id)
-       console.log(dto.accessories_id)
-          console.log(dto.pant_id)
-          console.log(dto.
-            shoe_id
-          )
-          
-  const created = new this.avatarModel({
-  user_id: userId,
-  shirt_id: new Types.ObjectId(dto.shirt_id),
-  pant_id: new Types.ObjectId(dto.pant_id),
-  shoe_id: new Types.ObjectId(dto.shoe_id),
-  backgroundimageurl:dto.backgroundimageurl,
-  accessories_id: new Types.ObjectId(dto.accessories_id),
-  stored_message: dto.stored_message, // ✅ Fixed
-  avatarUrl: dto.avatarUrl,
-  date: dto.date,
-});;
-    console.log(created)
+  async saveavatar(dto: CreateAvatarDto, userId: string, stackimage?: any) {
+    try {
+      let stackimageUrl = '';
+      if (stackimage) {
+        const buffer = stackimage.buffer || (stackimage.path ? fs.readFileSync(stackimage.path) : null);
+        if (!buffer) {
+          throw new Error('Invalid stackimage: no buffer or path found');
+        }
+        stackimageUrl = await this.awsS3Service.uploadFile(buffer, userId + '_stackimage');
+      }
+      console.log("stackimageUrl",stackimageUrl)
+      console.log("dto",dto)
+      const created = new this.avatarModel({
+        user_id: userId,
+        shirt_id: new Types.ObjectId(dto.shirt_id),
+        pant_id: new Types.ObjectId(dto.pant_id),
+        shoe_id: new Types.ObjectId(dto.shoe_id),
+        backgroundimageurl: dto.backgroundimageurl,
+        accessories_id: new Types.ObjectId(dto.accessories_id),
+        stored_message: dto.stored_message,
+        avatarUrl: dto.avatarUrl,
+        date: dto.date,
+        stackimage: stackimageUrl,
+      });
 
-    await created.save();
+      await created.save();
+      console.log("all data is saved");
 
-    return {
-      success: true,
-      message: 'Avatar saved successfully',
-    };
-  } catch (error) {
-    console.log("yes")
-    throw new Error(`Failed to save avatar: ${error.message}`);
+      return {
+        success: true,
+        message: 'Avatar saved successfully',
+        avatarUrl: dto.avatarUrl,
+        backgroundimageurl: dto.backgroundimageurl,
+        stackimage: stackimageUrl,
+      };
+    } catch (error) {
+      throw new Error(`Failed to save avatar: ${error.message}`);
+    }
   }
-}
 
   
 
@@ -101,6 +106,7 @@ export class AvatarService {
         success: true,
         avatarUrl: avatar.avatarUrl,
         backgroundimageurl: avatar.backgroundimageurl,
+        stackimage: avatar.stackimage,
       };
     } else {
       return {
@@ -118,7 +124,7 @@ export class AvatarService {
           user_id: userId,
           date: { $exists: true, $ne: null }, // ✅ Only avatars with date
         })
-        .select('avatarUrl date stored_message backgroundimageurl') // stored_message might be null or missing — that's OK
+        .select('avatarUrl date stored_message backgroundimageurl stackimage') // stored_message might be null or missing — that's OK
         .sort({ date: -1 })
         .lean();
 
@@ -129,6 +135,7 @@ export class AvatarService {
           avatarUrl: avatar.avatarUrl,
           stored_message: avatar.stored_message ?? '',
           backgroundimageurl: avatar.backgroundimageurl,
+          stackimage: avatar.stackimage,
            // 👈 fallback to empty string if it's null
         })),
       };

@@ -1,8 +1,6 @@
 import { IsString, Matches } from 'class-validator';
 
 export class CreateAvatarDto {
-
-
   @IsString()
   shirt_id: string;
 
@@ -13,18 +11,20 @@ export class CreateAvatarDto {
   shoe_id: string;
 
   @IsString()
-  
   accessories_id: string;
+
   @IsString()
-  
-  stored_message: string;
+  stored_message?: string;
 
   @IsString()
   avatarUrl: string;
+
   @IsString()
   backgroundimageurl: string;
 
-  @Matches(/^\d{2}\/\d{2}\/\d{4}$/, {
+  stackimage?: any;
+
+  @Matches(/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, {
     message: 'date must be in dd/mm/yyyy format',
   })
   date: string;

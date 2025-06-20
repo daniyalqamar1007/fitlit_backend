@@ -22,16 +22,17 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 export class AvatarController {
   constructor(private readonly avatarService: AvatarService) {}
 
+  
   @UseGuards(JwtAuthGuard)
   @Post('save-avatar')
-  async saveavatar(@Body() Dto: CreateAvatarDto, @Req() req: RequestWithUser) {
-    console.log("Raw request body:", req.body); // ✅ Log the raw body
-  console.log("DTO received:", Dto); // ✅ Log the DTO
-  console.log("Type of accessories_id:", typeof Dto.accessories_id); // ✅ Check type
-  console.log(Dto.backgroundimageurl)
-    console.log("coming")
+  @UseInterceptors(FileInterceptor('file', multerOptions))
+  async saveavatar(
+    @Body() Dto: CreateAvatarDto,
+    @Req() req: RequestWithUser,
+    @UploadedFile() stackimage?: any
+  ) {
     const userId = req.user.userId;
-    return this.avatarService.saveavatar(Dto, userId);
+    return this.avatarService.saveavatar(Dto, userId, stackimage);
   }
 
   @Get('check')

@@ -4,10 +4,12 @@ import {
   Controller,
   Get,
   Patch,
+  Post,
   Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  Param,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -33,7 +35,12 @@ export class UserController {
   @Get('profile')
   async getProfile(@Req() req: RequestWithUser) {
     const userId = req.user.userId;
-    return this.userService.findByIdForProfile(userId);
+    const profile = await this.userService.findByIdForProfile(userId);
+    const followCounts = await this.userService.getFollowCounts(Number(userId));
+    return {
+      ...profile,
+      ...followCounts
+    };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -80,18 +87,57 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get('all')
-  async getAllUsers() {
+  async getAllUsers(@Req() req: RequestWithUser) {
+    const currentUserId = req.user.userId;
     const users = await this.userService.findAll();
-    const filteredUsers = users
-      .filter(user => user.profilePicture && user.profilePicture.trim() !== '')
-      .map(user => ({
-        id: user.userId,
-        name: user.name,
-        profilePicture: user.profilePicture
-      }));
+    const filteredUsers = await Promise.all(
+      users
+        .filter(user => user.profilePicture && user.profilePicture.trim() !== '')
+        .map(async user => {
+          const followCounts = await this.userService.getFollowCounts(Number(user.userId));
+          const isFollowing = await this.userService.isFollowing(Number(currentUserId), Number(user.userId));
+          const avatarsWithDateResult = await this.AvatarService.getAvatarsByDate(String(user.userId));
+          const avatars = Array.isArray(avatarsWithDateResult.data)
+            ? avatarsWithDateResult.data.map(a => a.avatarUrl)
+            : [];
+          return {
+            id: user.userId,
+            name: user.name,
+            profilePicture: user.profilePicture,
+            gender: user.gender,
+            email: user.email,
+            following: followCounts.following,
+            followers: followCounts.followers,
+            isFollowing,
+            avatars
+          };
+        })
+    );
     return {
       success: true,
       data: filteredUsers
     };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('follow-action')
+  async followAction(@Req() req, @Body() body: { userId: number; action: 'follow' | 'unfollow' }) {
+    const currentUserId = req.user.userId;
+    const { userId, action } = body;
+    if (!userId || !action) {
+      throw new BadRequestException('userId and action are required');
+    }
+    if (!['follow', 'unfollow'].includes(action)) {
+      throw new BadRequestException('action must be follow or unfollow');
+    }
+    return this.userService.followOrUnfollow(currentUserId, userId, action);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('follow-counts/:userId')
+  async getFollowCounts(@Param('userId') userId: string) {
+    const id = Number(userId);
+    if (isNaN(id)) throw new BadRequestException('Invalid userId');
+    return this.userService.getFollowCounts(id);
   }
 }

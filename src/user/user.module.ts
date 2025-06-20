@@ -7,12 +7,14 @@ import { CounterSchema } from '../common/schemas/counter.schemas';
 import { UserController } from './user.controller';
 import { AwsService } from '../aws/aws.service';
 import { AvatarModule } from 'src/avatar/avatar.module';
+import { Follow, FollowSchema } from './schemas/follow.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: 'User', schema: UserSchema },
       { name: 'Counter', schema: CounterSchema },
+      { name: Follow.name, schema: FollowSchema },
     ]),
     AvatarModule,
   ],
