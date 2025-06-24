@@ -13,7 +13,8 @@ import { AwsService } from 'src/aws/aws.service';
 import {
   WardrobeItem,
   WardrobeItemDocument,
-} from 'src/wardrobe/schemas/wardrobe.schema';
+} from '../wardrobe/schemas/wardrobe.schema';
+import { NotificationService } from '../notifications/notification.service';
 
 type InputType = 'Path' | 'Buffer';
 
@@ -42,6 +43,7 @@ export class AvatarService {
     private readonly wardropeModel: Model<WardrobeItemDocument>,
 
     private readonly awsS3Service: AwsService,
+    private readonly notificationService: NotificationService,
   ) {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
@@ -634,6 +636,14 @@ console.log(avatarUrls.length)
     throw new Error(`Failed to fetch user avatars: ${error.message}`);
   }
 }
+
+  async getNotificationsForUser(userId: string) {
+    try {
+      return this.notificationService.getNotificationsForUser(Number(userId));
+    } catch (error) {
+      throw new Error(`Failed to fetch notifications: ${error.message}`);
+    }
+  }
 
 }
 

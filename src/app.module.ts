@@ -14,6 +14,7 @@ import { ContactModule } from './contact/contact.module';
 import { RatingModule } from './rating/rating.module';
 import { AppSettingsModule } from './app-settings/app-settings.module';
 import { BackgroundImagesModule } from './background-images/background-images.module';
+import { NotificationModule } from './notifications/notification.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { BackgroundImagesModule } from './background-images/background-images.mo
     RatingModule,
     AppSettingsModule,
     BackgroundImagesModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

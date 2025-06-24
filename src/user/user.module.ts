@@ -8,6 +8,7 @@ import { UserController } from './user.controller';
 import { AwsService } from '../aws/aws.service';
 import { AvatarModule } from 'src/avatar/avatar.module';
 import { Follow, FollowSchema } from './schemas/follow.schema';
+import { NotificationModule } from '../notifications/notification.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { Follow, FollowSchema } from './schemas/follow.schema';
       { name: Follow.name, schema: FollowSchema },
     ]),
     AvatarModule,
+    NotificationModule,
   ],
   controllers: [UserController],
 

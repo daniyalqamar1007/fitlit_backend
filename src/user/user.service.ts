@@ -13,6 +13,7 @@ import { User, UserDocument } from './schemas/user.schema';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { OtpVerifyDto } from 'src/auth/dto/signup.dto/otp-verify.dto';
 import { Follow, FollowDocument } from './schemas/follow.schema';
+import { NotificationService } from '../notifications/notification.service';
 
 @Injectable()
 export class UserService {
@@ -24,6 +25,7 @@ export class UserService {
     @InjectModel('User') private userModel: Model<any>,
     private counterService: CounterService,
     @InjectModel(Follow.name) private followModel: MongooseModel<FollowDocument>,
+    private notificationService: NotificationService,
   ) {}
 
   async createUser(dto: OtpVerifyDto) {
@@ -174,10 +176,24 @@ export class UserService {
         return { success: false, message: 'Already following' };
       }
       await this.followModel.create({ follower: followerObjId, following: followingObjId });
+      // Create notification for follow
+      await this.notificationService.createNotification(
+        targetUserId,
+        'follow',
+        `${follower.name} started following you`,
+        currentUserId,
+      );
       return { success: true, message: 'Followed successfully' };
     } else {
       const res = await this.followModel.deleteOne({ follower: followerObjId, following: followingObjId });
       if (res.deletedCount > 0) {
+        // Create notification for unfollow
+        await this.notificationService.createNotification(
+          targetUserId,
+          'unfollow',
+          `${follower.name} unfollowed you`,
+          currentUserId,
+        );
         return { success: true, message: 'Unfollowed successfully' };
       } else {
         return { success: false, message: 'Not following' };

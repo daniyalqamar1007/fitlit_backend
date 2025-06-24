@@ -28,11 +28,11 @@ export class AvatarController {
   @UseInterceptors(FileInterceptor('file', multerOptions))
   async saveavatar(
     @Body() Dto: CreateAvatarDto,
-    @Req() req: RequestWithUser,
+        @Req() req: RequestWithUser,
     @UploadedFile() stackimage?: any
   ) {
     const userId = req.user.userId;
-    return this.avatarService.saveavatar(Dto, userId, stackimage);
+    return this.avatarService.saveavatar(Dto, userId, stackimage); 
   }
 
   @Get('check')
@@ -88,7 +88,7 @@ async getUserAvatars(@Req() req: RequestWithUser) {
     console.error(error);
     throw new HttpException(
       'Failed to fetch user avatars',
-      HttpStatus.INTERNAL_SERVER_ERROR,
+     HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
 }

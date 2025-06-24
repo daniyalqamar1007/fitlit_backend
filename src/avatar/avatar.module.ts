@@ -7,17 +7,17 @@ import { WardrobeItem, WardrobeItemSchema } from 'src/wardrobe/schemas/wardrobe.
 import { User, UserSchema } from 'src/user/schemas/user.schema';
 import { UserModule } from 'src/user/user.module';
 import { AwsModule } from 'src/aws/aws.module';
+import { NotificationModule } from '../notifications/notification.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Avatar.name, schema: AvatarSchema },
       { name: WardrobeItem.name, schema: WardrobeItemSchema },
-      { name: User.name, schema: UserSchema },
     ]),
-     forwardRef(() => UserModule), // Use forwardRef here
+    forwardRef(() => UserModule),
     AwsModule,
-    AvatarModule
+    NotificationModule
   ],
   controllers: [AvatarController],
   providers: [AvatarService],
