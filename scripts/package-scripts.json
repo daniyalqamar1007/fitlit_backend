@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "setup": "./scripts/setup-and-run.sh",
+    "check:errors": "ts-node scripts/error-check.ts",
+    "dev:backend": "npm run start:dev",
+    "dev:frontend": "cd ../frontend && npm run dev",
+    "dev:both": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "health": "curl http://localhost:3099/health",
+    "test:connection": "curl http://localhost:3099/api/health"
+  }
+}
