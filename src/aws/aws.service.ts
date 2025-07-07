@@ -9,6 +9,9 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import * as Multer from 'multer';
+import * as sharp from 'sharp';
+import * as path from 'path';
+
 @Injectable()
 export class AwsService {
   private s3: S3Client;
@@ -23,53 +26,36 @@ export class AwsService {
     });
     this.bucketName = process.env.S3_BUCKET_NAME!;
   }
-  // async uploadFile(base64: any, file?: Multer.File): Promise<string> {
-  //   const fileKey = `wardrobe/${Date.now()}-${file?.originalname || 'image.png'}`;
-
-  //   // Remove the base64 header if it exists (optional safety step)
-  //   const base64Data = base64.replace(/^data:image\/\w+;base64,/, '');
-
-  //   const buffer = Buffer.from(base64Data, 'base64'); // ✅ convert to binary buffer
-
-  //   const command = new PutObjectCommand({
-  //     Bucket: this.bucketName,
-  //     Key: fileKey,
-  //     Body: buffer, // ✅ use buffer, not base64 string
-  //     ContentType: file?.mimetype || 'image/png',
-  //     // ACL: 'public-read', // optional
-  //   });
-
-  //   await this.s3.send(command);
-
-  //   return `https://${this.bucketName}.s3.${this.configService.get<string>('AWS_BUCKET_REGION')}.amazonaws.com/${fileKey}`;
-  // }
-
-  // async uploadFile(buffer: any, file?:  Multer.File ): Promise<string> {
-  //   const fileKey = `wardrobe/${Date.now()}-${file.originalname}`;
-
-  //   const command = new PutObjectCommand({
-  //     Bucket: this.bucketName,
-  //     Key: fileKey,
-  //     Body: buffer,
-  //     ContentType: file.mimetype,
-  //     // ACL: 'public-read', // Make the file publicly accessible
-  //   });
-
-  //   await this.s3.send(command);
-
-  //   // Generate the public URL
-  //   return `https://${this.bucketName}.s3.${this.configService.get<string>('AWS_BUCKET_REGION')}.amazonaws.com/${fileKey}`;
-  // }
 
   async uploadFile(buffer: Buffer, file?: Multer.File): Promise<string> {
-    const fileKey = `wardrobe/${Date.now()}-${file?.originalname || 'image.png'}`;
+    const originalName = file?.originalname || 'image.png';
+    const fileExt = path.extname(originalName).toLowerCase();
+    const fileKey = `wardrobe/${Date.now()}-${originalName}`;
+    let compressedBuffer: Buffer;
+    let contentType = file?.mimetype || 'image/png';
+
+    if (fileExt === '.png') {
+      compressedBuffer = await sharp(buffer)
+        .png({ quality: 80, compressionLevel: 9 }) // Keeps transparency
+        .toBuffer();
+    } else if (fileExt === '.webp') {
+      compressedBuffer = await sharp(buffer).webp({ quality: 80 }).toBuffer();
+      contentType = 'image/webp';
+    } else {
+      // Default: convert to JPEG (no transparency)
+      compressedBuffer = await sharp(buffer).jpeg({ quality: 70 }).toBuffer();
+      contentType = 'image/jpeg';
+    }
+
+    if (compressedBuffer.length > 500 * 1024) {
+      throw new Error('Image too large even after compression');
+    }
 
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
       Key: fileKey,
-      Body: buffer, // Already a buffer — no conversion needed
-      ContentType: 'image/png',
-      // ACL: 'public-read', // optional
+      Body: compressedBuffer,
+      ContentType: contentType,
     });
 
     await this.s3.send(command);
@@ -78,16 +64,43 @@ export class AwsService {
   }
 
   async uploadFileDress(file: Multer.File, userId: string): Promise<string> {
+    const fileExt = path.extname(file.originalname).toLowerCase();
     const fileKey = `wardrobe/${userId}/${Date.now()}-${file.originalname}`;
+
+    let compressedBuffer: Buffer;
+    let contentType = file.mimetype;
+
+    if (fileExt === '.png') {
+      compressedBuffer = await sharp(file.buffer)
+        .png({ quality: 80, compressionLevel: 9 }) // Preserves transparency
+        .toBuffer();
+    } else if (fileExt === '.webp') {
+      compressedBuffer = await sharp(file.buffer)
+        .webp({ quality: 80 })
+        .toBuffer();
+      contentType = 'image/webp';
+    } else {
+      // Default to JPEG for other types, with fallback (lossy, no transparency)
+      compressedBuffer = await sharp(file.buffer)
+        .jpeg({ quality: 70 })
+        .toBuffer();
+      contentType = 'image/jpeg';
+    }
+
+    // Optional: ensure file is under 500KB
+    if (compressedBuffer.length > 500 * 1024) {
+      throw new Error('Compressed image exceeds 500KB');
+    }
+
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
       Key: fileKey,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-      // ACL: 'public-read', // Make the file publicly accessible
+      Body: compressedBuffer,
+      ContentType: contentType,
     });
+
     await this.s3.send(command);
-    // Generate the public URL
+
     return `https://${this.bucketName}.s3.${this.configService.get<string>('AWS_BUCKET_REGION')}.amazonaws.com/${fileKey}`;
   }
 

@@ -22,38 +22,40 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 export class AvatarController {
   constructor(private readonly avatarService: AvatarService) {}
 
-  
   @UseGuards(JwtAuthGuard)
   @Post('save-avatar')
   @UseInterceptors(FileInterceptor('file', multerOptions))
   async saveavatar(
     @Body() Dto: CreateAvatarDto,
-        @Req() req: RequestWithUser,
-    @UploadedFile() stackimage?: any
+    @Req() req: RequestWithUser,
+    @UploadedFile() stackimage?: any,
   ) {
+    console.log('save-avatar', Dto, stackimage);
     const userId = req.user.userId;
-    return this.avatarService.saveavatar(Dto, userId, stackimage); 
+    return this.avatarService.saveavatar(Dto, userId, stackimage);
   }
 
   @Get('check')
-  async checkAvailability(@Query('date') date: string,@Query('id') id: string) {
-    return this.avatarService.checkAvailability(id,date);
+  async checkAvailability(
+    @Query('date') date: string,
+    @Query('id') id: string,
+  ) {
+    return this.avatarService.checkAvailability(id, date);
   }
-@UseGuards(JwtAuthGuard)
-@Get('all-by-date')
-async getAllByDate(@Req() req: RequestWithUser) {
-  try {
-    const userId = req.user.userId;
-    return await this.avatarService.getAvatarsByDate(userId);
-  } catch (error) {
-    console.error(error);
-    throw new HttpException(
-      'Failed to fetch avatars by date',
-      HttpStatus.INTERNAL_SERVER_ERROR,
-    );
+  @UseGuards(JwtAuthGuard)
+  @Get('all-by-date')
+  async getAllByDate(@Req() req: RequestWithUser) {
+    try {
+      const userId = req.user.userId;
+      return await this.avatarService.getAvatarsByDate(userId);
+    } catch (error) {
+      console.error(error);
+      throw new HttpException(
+        'Failed to fetch avatars by date',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
-}
-
 
   @Post('test')
   @UseInterceptors(FileInterceptor('file', multerOptions))
@@ -78,29 +80,50 @@ async getAllByDate(@Req() req: RequestWithUser) {
   // async swipe(@Body() dto: any, @Req() req: RequestWithUser) {
   //   return await this.avatarService.swipe(dto, req.user.userId);
   // }
-@UseGuards(JwtAuthGuard)
-@Get('user-avatars')
-async getUserAvatars(@Req() req: RequestWithUser) {
-  try {
-    const userId = req.user.userId;
-    return await this.avatarService.getAllUserAvatars(userId);
-  } catch (error) {
-    console.error(error);
-    throw new HttpException(
-      'Failed to fetch user avatars',
-     HttpStatus.INTERNAL_SERVER_ERROR,
-    );
+  @UseGuards(JwtAuthGuard)
+  @Get('user-avatars')
+  async getUserAvatars(@Req() req: RequestWithUser) {
+    try {
+      const userId = req.user.userId;
+      return await this.avatarService.getAllUserAvatars(userId);
+    } catch (error) {
+      console.error(error);
+      throw new HttpException(
+        'Failed to fetch user avatars',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
-}
+
+  // @UseGuards(JwtAuthGuard)
+  @Get('user-avatars-with-bg')
+  async getUserAvatarsList(@Query('userId') userId: string) {
+    try {
+      return await this.avatarService.getAllUserAvatarsWithBg(userId);
+    } catch (error) {
+      console.error(error);
+      throw new HttpException(
+        'Failed to fetch user avatars',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('outfit')
   async outfit(
     @Body()
-    dto: { shirt_id: string; accessories_id:string;pant_id: string; shoe_id: string;profile_picture:string },
+    dto: {
+      shirt_id: string;
+      accessories_id: string;
+      pant_id: string;
+      shoe_id: string;
+      profile_picture: string;
+    },
     @Req() req: RequestWithUser,
   ) {
     try {
-      console.log("coming")
+      console.log('coming');
       // console.log(accessories_id)y
       return this.avatarService.outfit(dto, req.user?.userId);
     } catch (error) {
